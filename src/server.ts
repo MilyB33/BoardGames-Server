@@ -1,10 +1,11 @@
 import express, { Response } from 'express';
 import cors from 'cors';
+import MongoCustomClient from './clients/mongoClient';
 
 import register from './db/register';
 import login from './db/login';
 
-import { BaseErr } from './utils/types';
+import { BaseErr, ErrorTypes } from './utils/types';
 
 const server = express();
 
@@ -25,9 +26,15 @@ server.post('/register', async (req, res) => {
 
     res.status(200).json({ message: 'User created' });
   } catch (err) {
-    const { message, statusCode } = err as BaseErr;
+    const { name } = err as Error | BaseErr;
 
-    res.status(statusCode || 500).json({ message });
+    if (name === ErrorTypes.BaseError) {
+      const { message, statusCode } = err as BaseErr;
+
+      if (statusCode) res.status(statusCode).json({ message });
+    } else res.status(500).json({ message: 'Something went wrong' });
+  } finally {
+    MongoCustomClient.close();
   }
 });
 
@@ -39,9 +46,14 @@ server.post('/login', async (req, res) => {
       user: userData,
     });
   } catch (err) {
-    const { message, statusCode } = err as BaseErr;
+    const { name } = err as Error | BaseErr;
 
-    res.status(statusCode || 500).json({ message });
+    if (name === ErrorTypes.BaseError) {
+      const { message, statusCode } = err as BaseErr;
+      if (statusCode) res.status(statusCode).json({ message });
+    } else res.status(500).json({ message: 'Something went wrong' });
+  } finally {
+    MongoCustomClient.close();
   }
 });
 
