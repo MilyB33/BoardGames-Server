@@ -1,26 +1,23 @@
 import MongoCustomClient from '../clients/mongoClient';
 import bcrypt from 'bcrypt';
-import BaseError from './Error';
-import { BaseErr, ErrorTypes } from './types';
+import BaseError from '../utils/Error';
+import { BaseErr, ErrorTypes } from '../utils/types';
 
-import { Secrets } from './types';
+import { Secrets } from '../utils/types';
 
 export default async function login(secrets: Secrets) {
   try {
     const { username, password } = secrets;
 
     const db = await MongoCustomClient.connect();
-
     const collection = db.collection('Users');
 
     const user = await collection.findOne({ username });
-
     if (!user) throw new BaseError('User not found', 404);
 
     const { password: hashedPassword } = user;
 
     const isSame = await bcrypt.compare(password, hashedPassword);
-
     if (!isSame) throw new BaseError('Invalid password', 401);
 
     return {

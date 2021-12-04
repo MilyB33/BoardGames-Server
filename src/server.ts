@@ -1,8 +1,8 @@
 import express, { Response } from 'express';
 import cors from 'cors';
 
-import register from './utils/register';
-import login from './utils/login';
+import register from './db/register';
+import login from './db/login';
 
 import { BaseErr } from './utils/types';
 
@@ -23,11 +23,11 @@ server.post('/register', async (req, res) => {
   try {
     await register(req.body);
 
-    res.status(200).send('User created');
+    res.status(200).json({ message: 'User created' });
   } catch (err) {
     const { message, statusCode } = err as BaseErr;
 
-    res.status(statusCode || 500).send({ message });
+    res.status(statusCode || 500).json({ message });
   }
 });
 
@@ -41,7 +41,7 @@ server.post('/login', async (req, res) => {
   } catch (err) {
     const { message, statusCode } = err as BaseErr;
 
-    res.status(statusCode || 500).send({ message });
+    res.status(statusCode || 500).json({ message });
   }
 });
 

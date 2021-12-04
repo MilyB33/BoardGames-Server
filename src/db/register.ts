@@ -1,7 +1,7 @@
 import MongoCustomClient from '../clients/mongoClient';
 import bcrypt from 'bcrypt';
-import BaseError from './Error';
-import { BaseErr, ErrorTypes, Secrets } from './types';
+import BaseError from '../utils/Error';
+import { BaseErr, ErrorTypes, Secrets } from '../utils/types';
 
 export default async function register(secrets: Secrets) {
   try {
@@ -22,7 +22,6 @@ export default async function register(secrets: Secrets) {
     const users = db.collection('Users');
 
     const searchExistingUser = await users.findOne({ username });
-
     if (searchExistingUser)
       throw new BaseError('User already exists', 400);
 
