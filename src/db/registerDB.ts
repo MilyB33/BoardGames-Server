@@ -1,7 +1,7 @@
 import MongoCustomClient from '../clients/mongoClient';
 import bcrypt from 'bcrypt';
 import BaseError from '../utils/Error';
-import { Secrets } from '../utils/types';
+import { Secrets } from '../models/models';
 
 export default async function register(secrets: Secrets) {
   const { username, password } = secrets;

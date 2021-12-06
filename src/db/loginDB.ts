@@ -1,7 +1,13 @@
 import MongoCustomClient from '../clients/mongoClient';
 import bcrypt from 'bcrypt';
+
+import jwt, { Secret } from 'jsonwebtoken';
 import BaseError from '../utils/Error';
-import { Secrets } from '../utils/types';
+import { Secrets } from '../models/models';
+
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export default async function login(secrets: Secrets) {
   const { username, password } = secrets;
@@ -17,8 +23,14 @@ export default async function login(secrets: Secrets) {
   const isSame = await bcrypt.compare(password, hashedPassword);
   if (!isSame) throw new BaseError('Invalid password', 401);
 
+  const token = jwt.sign(
+    { username, id: user._id },
+    process.env.JWT_SECRET as Secret
+  );
+
   return {
     ...user,
     password: undefined,
+    token,
   };
 }

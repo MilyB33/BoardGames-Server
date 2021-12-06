@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { BaseErr, ErrorTypes } from '../utils/types';
+import { BaseErr, ErrorTypes } from '../models/models';
 
 import MongoCustomClient from '../clients/mongoClient';
 

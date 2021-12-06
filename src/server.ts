@@ -6,12 +6,13 @@ import headers from './middlewares/headers';
 import errorHandler from './middlewares/errorHandler';
 
 import usersRoutes from './routes/users';
+import posts from './routes/posts';
 
 const NAMESPACE = 'Server';
 
 const server = express();
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 
 server.use(cors());
 server.use((req, res, next) => logger(req, res, next, NAMESPACE));
@@ -27,6 +28,7 @@ server.get('/', async (req, res: Response) => {
 
 // Users endpoints
 server.use(usersRoutes);
+server.use(posts);
 
 server.use(errorHandler);
 

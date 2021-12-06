@@ -14,11 +14,10 @@ class MongoCustomClient {
     await this.client.connect();
 
     logging.info(NAMESPACE, `Connected to MongoDB`);
-    console.log('Connected to MongoDB');
 
     const db = this.client.db(dbName);
 
-    console.log('Connected to Database');
+    logging.info(NAMESPACE, `Connected to MongoDB`);
 
     return db;
   }

@@ -13,3 +13,17 @@ export interface Secrets {
   username: string;
   password: string;
 }
+
+export interface User {
+  id: string;
+  username: string;
+  token: string;
+}
+
+export interface Event {
+  place: string;
+  date: string;
+  time: string;
+  game: string;
+  description: string;
+}

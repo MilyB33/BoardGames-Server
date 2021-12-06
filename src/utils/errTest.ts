@@ -1,4 +1,4 @@
-import { BaseErr, ErrorTypes } from './types';
+import { BaseErr, ErrorTypes } from '../models/models';
 import { Response } from 'express';
 
 type Err = BaseErr | Error;
