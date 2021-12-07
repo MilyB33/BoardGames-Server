@@ -27,3 +27,11 @@ export interface Event {
   game: string;
   description: string;
 }
+
+export interface EventOptionally {
+  place?: string;
+  date?: string;
+  time?: string;
+  game?: string;
+  description?: string;
+}

@@ -4,6 +4,7 @@ const router = Router();
 
 import authenticate from '../middlewares/authenticate';
 import validateEvent from '../middlewares/validateEvent';
+import checkEventKeys from '../middlewares/checkEventKeys';
 
 import eventsControllers from '../controllers/events';
 
@@ -31,6 +32,12 @@ router.delete(
   '/event/:userID/:eventID',
   authenticate,
   eventsControllers.deleteEvent
+);
+
+router.patch(
+  '/event/:userID/:eventID',
+  [authenticate, checkEventKeys],
+  eventsControllers.updateEvent
 );
 
 export = router;
