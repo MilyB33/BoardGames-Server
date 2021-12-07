@@ -3,7 +3,13 @@ import bcrypt from 'bcrypt';
 import BaseError from '../utils/Error';
 import { Secrets } from '../models/models';
 
+import logging from '../config/logging';
+
+const NAMESPACE = 'registerDB';
+
 export default async function register(secrets: Secrets) {
+  logging.info(NAMESPACE, 'register');
+
   const { username, password } = secrets;
 
   const db = await MongoCustomClient.connect();

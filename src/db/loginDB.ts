@@ -5,11 +5,17 @@ import jwt, { Secret } from 'jsonwebtoken';
 import BaseError from '../utils/Error';
 import { Secrets } from '../models/models';
 
+import logging from '../config/logging';
+
 import dotenv from 'dotenv';
 
 dotenv.config();
 
+const NAMESPACE = 'loginDB';
+
 export default async function login(secrets: Secrets) {
+  logging.info(NAMESPACE, 'login');
+
   const { username, password } = secrets;
 
   const db = await MongoCustomClient.connect();

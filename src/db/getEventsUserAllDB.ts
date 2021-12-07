@@ -1,10 +1,10 @@
 import MongoCustomClient from '../clients/mongoClient';
 import logging from '../config/logging';
 
-const NAMESPACE = 'getEventsAllDB';
+const NAMESPACE = 'getEventsUserAllDB';
 
 export default async function getEventsUserAll(userID: string) {
-  logging.debug(NAMESPACE, 'getEventsAllDB');
+  logging.debug(NAMESPACE, 'getEventsUserAll');
 
   const db = await MongoCustomClient.connect();
 

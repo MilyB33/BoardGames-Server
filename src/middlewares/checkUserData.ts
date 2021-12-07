@@ -1,10 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 
+import logging from '../config/logging';
+
+const NAMESPACE = 'checkUserData';
+
 const checkUserData = (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  logging.info(NAMESPACE, 'Checking user data');
+
   const { username, password } = req.body;
 
   if (!username || !password) {
