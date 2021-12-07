@@ -1,3 +1,4 @@
 node_modules
 build
 http.rest
+.env
