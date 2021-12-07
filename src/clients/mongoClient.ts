@@ -17,7 +17,7 @@ class MongoCustomClient {
 
     const db = this.client.db(dbName);
 
-    logging.info(NAMESPACE, `Connected to MongoDB`);
+    logging.info(NAMESPACE, `Connected to DB`);
 
     return db;
   }

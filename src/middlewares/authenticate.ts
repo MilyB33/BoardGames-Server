@@ -9,6 +9,12 @@ dotenv.config();
 
 const NAMESPACE = 'Authenticate';
 
+interface DecodedToken {
+  id: string;
+  iat: number;
+  usernames: string;
+}
+
 async function authenticate(
   req: Request,
   res: Response,
@@ -19,6 +25,14 @@ async function authenticate(
   const token = authHeader && authHeader.split(' ')[1];
 
   if (token == null) return res.sendStatus(401);
+
+  const decoded = jwt.decode(token) as DecodedToken;
+
+  if (decoded == null) return res.sendStatus(401);
+
+  if (req.params.userID)
+    if (req.params.userID.toString() !== decoded.id.toString())
+      return res.sendStatus(401);
 
   if (process.env.JWT_SECRET !== null)
     jwt.verify(

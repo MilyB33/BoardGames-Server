@@ -7,6 +7,7 @@ import errorHandler from './middlewares/errorHandler';
 
 import usersRoutes from './routes/users';
 import posts from './routes/posts';
+import events from './routes/events';
 
 const NAMESPACE = 'Server';
 
@@ -18,7 +19,6 @@ server.use(cors());
 server.use((req, res, next) => logger(req, res, next, NAMESPACE));
 
 server.use(express.json());
-server.use(express.urlencoded({ extended: true }));
 
 server.use(headers);
 
@@ -26,9 +26,10 @@ server.get('/', async (req, res: Response) => {
   res.status(200).send('Use another endpoint to use the api');
 });
 
-// Users endpoints
+// Routes
 server.use(usersRoutes);
 server.use(posts);
+server.use(events);
 
 server.use(errorHandler);
 
