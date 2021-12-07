@@ -6,9 +6,6 @@ import { Secrets } from '../models/models';
 export default async function register(secrets: Secrets) {
   const { username, password } = secrets;
 
-  if (!username) throw new BaseError('Username is required', 400);
-  if (!password) throw new BaseError('Password is required', 400);
-
   const db = await MongoCustomClient.connect();
 
   const users = db.collection('Users');
