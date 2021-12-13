@@ -5,7 +5,7 @@ import checkUserData from '../middlewares/checkUserData';
 
 const router = Router();
 
-router.post('/login', usersControllers.login);
+router.post('/login', checkUserData, usersControllers.login);
 router.post('/register', checkUserData, usersControllers.register);
 
 export = router;

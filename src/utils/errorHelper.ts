@@ -18,8 +18,8 @@ export default async function errorHelper(
 
     if (name === ErrorTypes.BaseError) {
       const { message, statusCode } = err as BaseErr;
-      if (statusCode) res.status(statusCode).json({ message });
-    } else res.status(500).json({ message: customErrorMessage });
+      if (statusCode) res.status(statusCode).send({ message });
+    } else res.status(500).send(customErrorMessage);
   } finally {
     MongoCustomClient.close();
   }
