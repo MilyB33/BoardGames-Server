@@ -8,36 +8,48 @@ import checkEventKeys from '../middlewares/checkEventKeys';
 
 import eventsControllers from '../controllers/events';
 
-router.get('/event/all', eventsControllers.getEventsAll);
+router.get('/events/all', eventsControllers.getEventsAll);
 
 router.get(
-  '/event/:userID/all',
+  '/events/:userID/all',
   authenticate,
   eventsControllers.getUserEventsAll
 );
 
 router.get(
-  '/event/:userID/:eventID',
+  '/events/:userID/:eventID',
   authenticate,
   eventsControllers.getUserEvent
 );
 
 router.post(
-  '/event/create',
-  [authenticate, validateEvent],
+  '/events/:userID',
+  [authenticate, checkEventKeys, validateEvent],
   eventsControllers.add
 );
 
 router.delete(
-  '/event/:userID/:eventID',
+  '/events/:userID/:eventID',
   authenticate,
   eventsControllers.deleteEvent
 );
 
 router.patch(
-  '/event/:userID/:eventID',
+  '/events/:userID/:eventID',
   [authenticate, checkEventKeys],
   eventsControllers.updateEvent
+);
+
+router.post(
+  '/events/:userID/:eventID/sign',
+  [authenticate],
+  eventsControllers.signUpEvent
+);
+
+router.post(
+  '/events/:userID/:eventID/signOut',
+  [authenticate],
+  eventsControllers.signOutEvent
 );
 
 export = router;

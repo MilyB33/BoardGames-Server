@@ -11,11 +11,45 @@ function validateEvent(
 ) {
   logging.info(NAMESPACE, 'validateEvent');
 
-  const { place, date, time, game, description } = req.body;
+  const {
+    location,
+    date,
+    time,
+    game,
+    description,
+    town,
+    maxPlayers,
+  } = req.body;
 
-  if (!place || !description || !date || !time || !game) {
+  if (
+    !location ||
+    !description ||
+    !date ||
+    !time ||
+    !game ||
+    !town ||
+    !maxPlayers
+  ) {
     return res.status(400).json({
       message: 'Missing event information',
+    });
+  }
+
+  if (!Number.isInteger(maxPlayers)) {
+    return res.status(400).json({
+      message: 'Max players must be a number',
+    });
+  }
+
+  if (maxPlayers < 1) {
+    return res.status(400).json({
+      message: 'Max players must be greater than 0',
+    });
+  }
+
+  if (maxPlayers > 30) {
+    return res.status(400).json({
+      message: 'Max players must be less than 10',
     });
   }
 

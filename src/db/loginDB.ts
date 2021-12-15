@@ -31,8 +31,8 @@ export default async function login(secrets: Secrets) {
 
   const token = jwt.sign(
     { username, id: user._id },
-    process.env.JWT_SECRET as Secret,
-    { expiresIn: '1h' } // This is for testing purposes
+    process.env.JWT_SECRET as Secret
+    // { expiresIn: '1h' } For now we don't need to expire the token
   );
 
   return {

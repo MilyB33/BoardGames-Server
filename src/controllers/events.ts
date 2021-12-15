@@ -6,6 +6,8 @@ import getEventsUserAllDB from '../db/getEventsUserAllDB';
 import getUserEventDB from '../db/getUserEventDB';
 import deleteEventDB from '../db/deleteEventDB';
 import updateEventDB from '../db/updateEventDB';
+import signUserForEvent from '../db/signUserForEvent';
+import signOutUserforEvent from '../db/signOutUserForEvent';
 import errorHelper from '../utils/errorHelper';
 
 const getEventsAll = async (req: Request, res: Response) =>
@@ -46,9 +48,7 @@ const add = async (req: Request, res: Response) =>
     async () => {
       const events = await addEventDB(req.params.userID, req.body);
 
-      res.status(200).send({
-        events,
-      });
+      res.status(200).json(events);
     }
   );
 
@@ -82,6 +82,26 @@ const updateEvent = async (req: Request, res: Response) =>
     });
   });
 
+const signUpEvent = async (req: Request, res: Response) =>
+  errorHelper(req, res, 'Something went wrong', async () => {
+    const event = await signUserForEvent(
+      req.params.userID,
+      req.params.eventID
+    );
+
+    res.status(200).json(event);
+  });
+
+const signOutEvent = async (req: Request, res: Response) =>
+  errorHelper(req, res, 'Something went wrong', async () => {
+    const event = await signOutUserforEvent(
+      req.params.userID,
+      req.params.eventID
+    );
+
+    res.status(200).json(event);
+  });
+
 export default {
   add,
   getEventsAll,
@@ -89,4 +109,6 @@ export default {
   getUserEvent,
   deleteEvent,
   updateEvent,
+  signUpEvent,
+  signOutEvent,
 };

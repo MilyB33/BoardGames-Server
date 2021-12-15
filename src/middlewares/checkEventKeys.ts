@@ -14,11 +14,13 @@ const checkEventKeys = (
     return res.status(400).send({ message: 'No body' });
 
   const allowedKeys = [
-    'place',
+    'location',
     'date',
     'time',
     'description',
     'game',
+    'town',
+    'maxPlayers',
   ];
 
   for (let key in req.body) {
