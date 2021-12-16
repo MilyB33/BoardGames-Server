@@ -22,6 +22,12 @@ router.get(
   eventsControllers.getUserEvent
 );
 
+router.get(
+  '/events/:userID/signed/all',
+  authenticate,
+  eventsControllers.getUserSignedEvents
+);
+
 router.post(
   '/events/:userID',
   [authenticate, checkEventKeys, validateEvent],
