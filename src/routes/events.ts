@@ -58,4 +58,10 @@ router.post(
   eventsControllers.signOutEvent
 );
 
+router.delete(
+  '/events/:userID/:eventID',
+  [authenticate],
+  eventsControllers.deleteUserEvent
+);
+
 export = router;

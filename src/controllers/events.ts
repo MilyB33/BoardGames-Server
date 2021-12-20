@@ -9,6 +9,7 @@ import updateEventDB from '../db/updateEventDB';
 import signUserForEvent from '../db/signUserForEvent';
 import signOutUserforEvent from '../db/signOutUserForEvent';
 import getUserSignedEventsDB from '../db/getUserSignedEventsDB';
+import deleteUserEventDB from '../db/deleteUserEventDB';
 import errorHelper from '../utils/errorHelper';
 
 const getEventsAll = async (req: Request, res: Response) =>
@@ -112,6 +113,18 @@ const getUserSignedEvents = async (req: Request, res: Response) =>
     });
   });
 
+const deleteUserEvent = async (req: Request, res: Response) =>
+  errorHelper(req, res, 'Something went wrong', async () => {
+    const events = await deleteUserEventDB(
+      req.params.userID,
+      req.params.eventID
+    );
+
+    res.status(200).send({
+      events,
+    });
+  });
+
 export default {
   add,
   getEventsAll,
@@ -122,4 +135,5 @@ export default {
   signUpEvent,
   signOutEvent,
   getUserSignedEvents,
+  deleteUserEvent,
 };
