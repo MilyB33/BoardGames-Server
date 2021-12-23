@@ -29,10 +29,14 @@ export default async function signUserForEvent(
   if (!event.signedUsers.includes(userID))
     throw new BaseError('User not signed for this event', 400);
 
-  const updatedEvent = await events.updateOne(
+  await events.updateOne(
     { _id: new ObjectId(eventID) },
     { $pull: { signedUsers: userID } }
   );
+
+  const updatedEvent = await events.findOne({
+    _id: new ObjectId(eventID),
+  });
 
   return updatedEvent;
 }

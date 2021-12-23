@@ -10,7 +10,7 @@ export default async function getUserSignedEventsDB(userId: string) {
 
   const events = await db
     .collection('Events')
-    .find({ signedUsers: userId })
+    .find({ signedUsers: userId, createdBy: { $ne: userId } })
     .toArray();
 
   return events;

@@ -30,10 +30,14 @@ export default async function signUserForEvent(
     throw new BaseError('User already signed for this event', 400);
   }
 
-  const updatedEvent = await events.updateOne(
+  await events.updateOne(
     { _id: new ObjectId(eventID) },
     { $push: { signedUsers: userID } }
   );
+
+  const updatedEvent = await events.findOne({
+    _id: new ObjectId(eventID),
+  });
 
   return updatedEvent;
 }

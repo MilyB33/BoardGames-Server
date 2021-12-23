@@ -48,9 +48,12 @@ const add = async (req: Request, res: Response) =>
     res,
     'Something went wrong during added',
     async () => {
-      const events = await addEventDB(req.params.userID, req.body);
+      const event = await addEventDB(
+        req.params.userID,
+        req.body.event
+      );
 
-      res.status(200).json(events);
+      res.status(200).json({ event });
     }
   );
 
@@ -91,7 +94,7 @@ const signUpEvent = async (req: Request, res: Response) =>
       req.params.eventID
     );
 
-    res.status(200).json(event);
+    res.status(200).json({ event });
   });
 
 const signOutEvent = async (req: Request, res: Response) =>
@@ -101,7 +104,7 @@ const signOutEvent = async (req: Request, res: Response) =>
       req.params.eventID
     );
 
-    res.status(200).json(event);
+    res.status(200).json({ event });
   });
 
 const getUserSignedEvents = async (req: Request, res: Response) =>

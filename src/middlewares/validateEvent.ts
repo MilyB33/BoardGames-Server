@@ -19,7 +19,7 @@ function validateEvent(
     description,
     town,
     maxPlayers,
-  } = req.body;
+  } = req.body.event;
 
   if (
     !location ||

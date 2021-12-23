@@ -13,6 +13,8 @@ const checkEventKeys = (
   if (_.isEmpty(req.body))
     return res.status(400).send({ message: 'No body' });
 
+  console.log(req.body);
+
   const allowedKeys = [
     'location',
     'date',
@@ -23,7 +25,7 @@ const checkEventKeys = (
     'maxPlayers',
   ];
 
-  for (let key in req.body) {
+  for (let key in req.body.event) {
     if (!allowedKeys.includes(key)) {
       logging.error(
         `${NAMESPACE}: ${key} is not allowed property.`,
