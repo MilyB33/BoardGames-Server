@@ -10,12 +10,9 @@ const login = async (req: Request, res: Response) =>
     res,
     'Something went wrong during logging in',
     async () => {
-      const userData = await loginDB(req.body);
+      const result = await loginDB(req.body);
 
-      res.status(200).json({
-        message: 'User logged in',
-        user: userData,
-      });
+      res.status(200).send({ message: 'User logged in', result });
     }
   );
 
@@ -27,26 +24,9 @@ const register = async (req: Request, res: Response) =>
     async () => {
       await registerDB(req.body);
 
-      res.status(200).json({ message: 'User created' });
+      res.status(200).send({ message: 'User created', result: null });
     }
   );
-
-// const register = async (req: Request, res: Response) => {
-//   try {
-//     await registerDB(req.body);
-
-//     res.status(200).json({ message: 'User created' });
-//   } catch (err) {
-//     const { name } = err as Error | BaseErr;
-
-//     if (name === ErrorTypes.BaseError) {
-//       const { message, statusCode } = err as BaseErr;
-//       if (statusCode) res.status(statusCode).json({ message });
-//     } else res.status(500).json({ message: 'Something went wrong' });
-//   } finally {
-//     MongoCustomClient.close();
-//   }
-// };
 
 export default {
   login,
