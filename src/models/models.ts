@@ -1,3 +1,5 @@
+import { Document, WithId, ModifyResult } from 'mongodb';
+
 export interface BaseErr {
   message: string;
   statusCode?: number;
@@ -35,3 +37,31 @@ export interface EventOptionally {
   game?: string;
   description?: string;
 }
+
+export interface FullEvent {
+  date: string;
+  time: string;
+  game: string;
+  description: string;
+  location: string;
+  town: string;
+  createdAt: string;
+  createdBy: {
+    _id: string;
+    username: string;
+  };
+  _id: string;
+  maxPlayers: number;
+  signedUsers: {
+    _id: string;
+    username: string;
+  }[];
+}
+
+export type MongoDocument<T> = WithId<Document & T>;
+
+// ========================================================
+
+export type FullEventDocument = MongoDocument<FullEvent>;
+
+export type ModifiedEventDocument = ModifyResult;

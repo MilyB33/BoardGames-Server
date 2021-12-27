@@ -15,6 +15,7 @@ export default async function errorHelper(
     await callback();
   } catch (err) {
     const { name } = err as Error | BaseErr;
+    console.log(err);
 
     if (name === ErrorTypes.BaseError) {
       const { message, statusCode } = err as BaseErr;

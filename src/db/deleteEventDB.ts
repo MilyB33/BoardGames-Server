@@ -12,7 +12,8 @@ export default async function deleteEvent(
 
   const db = await MongoCustomClient.connect();
 
-  await db
-    .collection('Events')
-    .deleteOne({ _id: new ObjectId(eventID), createdBy: userID });
+  await db.collection('Events').deleteOne({
+    _id: new ObjectId(eventID),
+    'createdBy._id': new ObjectId(userID),
+  });
 }

@@ -14,9 +14,19 @@ export default async function signUserForEvent(
 
   const db = await MongoCustomClient.connect();
 
-  const events = db.collection('Events');
+  const eventsCollection = db.collection('Events');
+  const usersCollection = db.collection('Users');
 
-  const event = await events.findOne({ _id: new ObjectId(eventID) });
+  const user = await usersCollection.findOne(
+    { _id: new ObjectId(userID) },
+    { projection: { username: 1 } }
+  );
+
+  if (!user) throw new BaseError('User not found', 404);
+
+  const event = await eventsCollection.findOne({
+    _id: new ObjectId(eventID),
+  });
 
   if (!event) throw new BaseError('Event not found', 404);
 
@@ -26,16 +36,16 @@ export default async function signUserForEvent(
       400
     );
 
-  if (event.signedUsers.includes(userID)) {
+  if (event.signedUsers.includes(user)) {
     throw new BaseError('User already signed for this event', 400);
   }
 
-  await events.updateOne(
+  await eventsCollection.updateOne(
     { _id: new ObjectId(eventID) },
-    { $push: { signedUsers: userID } }
+    { $push: { signedUsers: user } }
   );
 
-  const updatedEvent = await events.findOne({
+  const updatedEvent = await eventsCollection.findOne({
     _id: new ObjectId(eventID),
   });
 

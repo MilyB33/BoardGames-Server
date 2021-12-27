@@ -18,7 +18,7 @@ export default async function updateEvent(
 
   const foundEvent = await db.collection('Events').findOne({
     _id: new ObjectId(eventID),
-    createdBy: userID,
+    'createdBy._id': new Object(userID),
   });
 
   console.log(foundEvent);
@@ -28,7 +28,7 @@ export default async function updateEvent(
   await db
     .collection('Events')
     .updateOne(
-      { _id: new ObjectId(eventID), createdBy: userID },
+      { _id: new ObjectId(eventID), 'createdBy._id': userID },
       { $set: { ...event } }
     );
 

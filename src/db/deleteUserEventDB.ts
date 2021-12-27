@@ -13,6 +13,6 @@ export default async function deleteUserEvent(
 
   await db.collection('Events').deleteOne({
     _id: new ObjectId(eventID),
-    createdBy: new ObjectId(userID),
+    'createdBy._id': new ObjectId(userID),
   });
 }

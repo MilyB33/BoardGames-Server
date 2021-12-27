@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import MongoClient from '../clients/mongoClient';
 import logging from '../config/logging';
 
@@ -10,7 +11,10 @@ export default async function getUserSignedEventsDB(userID: string) {
 
   const events = await db
     .collection('Events')
-    .find({ signedUsers: userID, createdBy: { $ne: userID } })
+    .find({
+      signedUsers: { $elemMatch: { _id: new ObjectId(userID) } },
+      'createdBy._id': { $ne: new ObjectId(userID) },
+    })
     .toArray();
 
   return events;

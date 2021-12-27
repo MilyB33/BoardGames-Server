@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import MongoCustomClient from '../clients/mongoClient';
 import logging from '../config/logging';
 
@@ -10,8 +11,10 @@ export default async function getEventsUserAll(userID: string) {
 
   const events = await db
     .collection('Events')
-    .find({ createdBy: userID })
+    .find({ 'createdBy._id': new ObjectId(userID) })
     .toArray();
+
+  console.log(events);
 
   return events;
 }

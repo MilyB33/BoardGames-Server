@@ -1,4 +1,4 @@
-import { ObjectId } from 'bson';
+import { ObjectId } from 'mongodb';
 import MongoCustomClient from '../clients/mongoClient';
 import logging from '../config/logging';
 
@@ -14,7 +14,10 @@ export default async function getUserEvent(
 
   const events = await db
     .collection('Events')
-    .findOne({ _id: new ObjectId(eventID), createdBy: userID });
+    .findOne({
+      _id: new ObjectId(eventID),
+      'createdBy._id': new ObjectId(userID),
+    });
 
   return events;
 }
