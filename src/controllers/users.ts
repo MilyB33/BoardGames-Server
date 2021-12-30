@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 
 import loginDB from '../db/loginDB';
 import registerDB from '../db/registerDB';
+import deleteUserDB from '../db/deleteUserDB';
 import errorHelper from '../utils/errorHelper';
 
 const login = async (req: Request, res: Response) =>
@@ -28,7 +29,20 @@ const register = async (req: Request, res: Response) =>
     }
   );
 
+const deleteUser = async (req: Request, res: Response) =>
+  errorHelper(
+    req,
+    res,
+    'Something went wrong during deleting',
+    async () => {
+      await deleteUserDB(req.params.userID);
+
+      res.status(200).send({ message: 'User deleted', result: null });
+    }
+  );
+
 export default {
   login,
   register,
+  deleteUser,
 };

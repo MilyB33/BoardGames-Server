@@ -8,7 +8,7 @@ import checkEventKeys from '../middlewares/checkEventKeys';
 
 import eventsControllers from '../controllers/events';
 
-router.get('/events/all', eventsControllers.getEventsAll);
+router.get('/events/all/', eventsControllers.getEventsAll);
 
 router.get(
   '/events/:userID/all',

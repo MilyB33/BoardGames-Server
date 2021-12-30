@@ -1,4 +1,4 @@
-import { ObjectId } from 'bson';
+import { ObjectId } from 'mongodb';
 import MongoCustomClient from '../clients/mongoClient';
 import BaseError from '../utils/Error';
 
@@ -18,23 +18,22 @@ export default async function updateEvent(
 
   const foundEvent = await db.collection('Events').findOne({
     _id: new ObjectId(eventID),
-    'createdBy._id': new Object(userID),
+    'createdBy._id': new ObjectId(userID),
   });
-
-  console.log(foundEvent);
 
   if (!foundEvent) throw new BaseError('Event not found', 404);
 
-  await db
-    .collection('Events')
-    .updateOne(
-      { _id: new ObjectId(eventID), 'createdBy._id': userID },
-      { $set: { ...event } }
-    );
+  await db.collection('Events').updateOne(
+    {
+      _id: new ObjectId(eventID),
+      'createdBy._id': new ObjectId(userID),
+    },
+    { $set: { ...event } }
+  );
 
   const result = await db.collection('Events').findOne({
     _id: new ObjectId(eventID),
-    createdBy: userID,
+    'createdBy._id': new ObjectId(userID),
   });
 
   return result;

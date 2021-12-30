@@ -14,7 +14,7 @@ import errorHelper from '../utils/errorHelper';
 
 const getEventsAll = async (req: Request, res: Response) =>
   errorHelper(req, res, 'Something went wrong', async () => {
-    const result = await getEventsAllDB();
+    const result = await getEventsAllDB(req.query);
 
     res.status(200).send({ message: 'Success', result });
   });
