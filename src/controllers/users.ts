@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import loginDB from '../db/loginDB';
 import registerDB from '../db/registerDB';
 import deleteUserDB from '../db/deleteUserDB';
+import updatePasswordDB from '../db/updatePasswordDB';
 import errorHelper from '../utils/errorHelper';
 
 const login = async (req: Request, res: Response) =>
@@ -41,8 +42,21 @@ const deleteUser = async (req: Request, res: Response) =>
     }
   );
 
+const updatePassword = async (req: Request, res: Response) =>
+  errorHelper(
+    req,
+    res,
+    'Something went wrong during updating',
+    async () => {
+      await updatePasswordDB(req.params.userID, req.body);
+
+      res.status(200).send({ message: 'User updated', result: null });
+    }
+  );
+
 export default {
   login,
   register,
   deleteUser,
+  updatePassword,
 };

@@ -16,4 +16,10 @@ router.delete(
   usersControllers.deleteUser
 );
 
+router.patch(
+  '/users/:userID/password',
+  authenticate,
+  usersControllers.updatePassword
+);
+
 export = router;

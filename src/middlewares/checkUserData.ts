@@ -10,7 +10,7 @@ const checkUserData = (
   next: NextFunction
 ) => {
   logging.info(NAMESPACE, 'Checking user data');
-  console.log(req.body);
+
   const { username, password } = req.body;
 
   if (!username || !password) {
