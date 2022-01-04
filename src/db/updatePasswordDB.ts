@@ -26,8 +26,6 @@ export default async function updatePasswordDB(
     _id: new ObjectId(userID),
   });
 
-  // Remember to done this in the future
-
   if (!foundUser) throw new BaseError('User not found', 404);
 
   const { password: hashedPassword } = foundUser;
