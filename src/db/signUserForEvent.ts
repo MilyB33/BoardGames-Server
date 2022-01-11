@@ -6,16 +6,22 @@ import logging from '../config/logging';
 
 const NAMESPACE = 'SignUserForEventDB';
 
+import {
+  EventsCollection,
+  FullEvent,
+  UserCollection,
+} from '../models/models';
+
 export default async function signUserForEvent(
   userID: string,
   eventID: string
-) {
+): Promise<FullEvent> {
   logging.info(NAMESPACE, 'signUserForEvent');
 
   const db = await MongoCustomClient.connect();
 
-  const eventsCollection = db.collection('Events');
-  const usersCollection = db.collection('Users');
+  const eventsCollection = db.collection<EventsCollection>('Events');
+  const usersCollection = db.collection<UserCollection>('Users');
 
   const user = await usersCollection.findOne(
     { _id: new ObjectId(userID) },
@@ -30,7 +36,7 @@ export default async function signUserForEvent(
 
   if (!event) throw new BaseError('Event not found', 404);
 
-  if (event.createdBy === userID)
+  if (event.createdBy._id === userID)
     throw new BaseError(
       'You can not sign up for your own event',
       400
@@ -48,6 +54,8 @@ export default async function signUserForEvent(
   const updatedEvent = await eventsCollection.findOne({
     _id: new ObjectId(eventID),
   });
+
+  if (!updatedEvent) throw new BaseError('Event not found', 404);
 
   return updatedEvent;
 }

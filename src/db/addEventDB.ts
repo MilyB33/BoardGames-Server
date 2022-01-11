@@ -1,37 +1,47 @@
 import { ObjectId } from 'mongodb';
 import MongoCustomClient from '../clients/mongoClient';
 
-import { Event } from '../models/models';
 import logging from '../config/logging';
 import BaseError from '../utils/Error';
+import {
+  Event,
+  EventsCollection,
+  UserCollection,
+} from '../models/models';
 
 const NAMESPACE = 'addEventDB';
 
-export default async function add(ownerID: string, event: Event) {
-  const db = await MongoCustomClient.connect();
-  const eventsCollection = db.collection('Events');
-  const usersCollection = db.collection('Users');
+export default async function add(
+  ownerID: string,
+  event: Event
+): Promise<EventsCollection> {
   logging.debug(NAMESPACE, `check ${ownerID}`);
 
+  const db = await MongoCustomClient.connect();
+
+  const eventsCollection = db.collection<EventsCollection>('Events');
+  const usersCollection = db.collection<UserCollection>('Users');
+
   const author = await usersCollection.findOne(
-    {
-      _id: new ObjectId(ownerID),
-    },
+    { _id: new ObjectId(ownerID) },
     { projection: { username: 1 } }
   );
 
   if (!author) throw new BaseError('User not found', 404);
 
+  const newEvent = {
+    ...event,
+    createdBy: author,
+    createdAt: new Date().toISOString(),
+    signedUsers: [author],
+  };
+
   const _id = await eventsCollection
-    .insertOne({
-      ...event,
-      createdBy: author,
-      createdAt: new Date().toISOString(),
-      signedUsers: [author],
-    })
+    .insertOne(newEvent)
     .then((result) => result.insertedId);
 
-  const eventAdded = await eventsCollection.findOne({ _id });
-
-  return eventAdded;
+  return {
+    ...newEvent,
+    _id: _id,
+  };
 }

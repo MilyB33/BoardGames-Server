@@ -3,6 +3,8 @@ import MongoCustomClient from '../clients/mongoClient';
 import BaseError from '../utils/Error';
 import bcrypt from 'bcrypt';
 
+import { UserCollection } from '../models/models';
+
 export default async function updatePasswordDB(
   userID: string,
   body: {
@@ -11,7 +13,7 @@ export default async function updatePasswordDB(
       newPassword: string;
     };
   }
-) {
+): Promise<void> {
   const { newPassword, oldPassword } = body.data;
 
   if (!newPassword || !oldPassword)
@@ -22,7 +24,9 @@ export default async function updatePasswordDB(
 
   const db = await MongoCustomClient.connect();
 
-  const foundUser = await db.collection('Users').findOne({
+  const collection = db.collection<UserCollection>('Users');
+
+  const foundUser = await collection.findOne({
     _id: new ObjectId(userID),
   });
 
@@ -42,7 +46,7 @@ export default async function updatePasswordDB(
 
   const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
-  await db.collection('Users').updateOne(
+  await collection.updateOne(
     {
       _id: new ObjectId(userID),
     },

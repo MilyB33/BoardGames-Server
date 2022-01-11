@@ -4,13 +4,18 @@ import logging from '../config/logging';
 
 const NAMESPACE = 'getUserSignedEvents';
 
-export default async function getUserSignedEventsDB(userID: string) {
+import { EventsCollection, FullEvent } from '../models/models';
+
+export default async function getUserSignedEventsDB(
+  userID: string
+): Promise<FullEvent[]> {
   logging.info(NAMESPACE, 'getUserSignedEvents');
 
   const db = await MongoClient.connect();
 
-  const events = await db
-    .collection('Events')
+  const eventsCollection = db.collection<EventsCollection>('Events');
+
+  const events = await eventsCollection
     .find({
       signedUsers: { $elemMatch: { _id: new ObjectId(userID) } },
       'createdBy._id': { $ne: new ObjectId(userID) },

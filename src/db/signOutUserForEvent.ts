@@ -1,7 +1,11 @@
 import { ObjectId } from 'mongodb';
 import MongoCustomClient from '../clients/mongoClient';
 import BaseError from '../utils/Error';
-import { FullEventDocument } from '../models/models';
+import {
+  EventsCollection,
+  FullEvent,
+  UserCollection,
+} from '../models/models';
 import logging from '../config/logging';
 
 const NAMESPACE = 'SignOutUserForEventDB';
@@ -9,13 +13,13 @@ const NAMESPACE = 'SignOutUserForEventDB';
 export default async function signUserForEvent(
   userID: string,
   eventID: string
-) {
+): Promise<FullEvent> {
   logging.info(NAMESPACE, 'signOutUserForEvent');
 
   const db = await MongoCustomClient.connect();
 
-  const eventsCollection = db.collection('Events');
-  const userCollection = db.collection('Users');
+  const eventsCollection = db.collection<EventsCollection>('Events');
+  const userCollection = db.collection<UserCollection>('Users');
 
   const user = await userCollection.findOne(
     { _id: new ObjectId(userID) },
@@ -24,7 +28,7 @@ export default async function signUserForEvent(
 
   if (!user) throw new BaseError('User not found', 404);
 
-  const event = await eventsCollection.findOne<FullEventDocument>({
+  const event = await eventsCollection.findOne({
     _id: new ObjectId(eventID),
   });
 
@@ -51,6 +55,8 @@ export default async function signUserForEvent(
   const updatedEvent = await eventsCollection.findOne({
     _id: new ObjectId(eventID),
   });
+
+  if (!updatedEvent) throw new BaseError('Event not found', 404);
 
   return updatedEvent;
 }

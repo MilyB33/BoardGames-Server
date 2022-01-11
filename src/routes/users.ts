@@ -6,6 +6,8 @@ import checkUserData from '../middlewares/checkUserData';
 
 const router = Router();
 
+router.get('/users/all', usersControllers.getUsers);
+
 router.post('/login', checkUserData, usersControllers.login);
 
 router.post('/register', checkUserData, usersControllers.register);
@@ -21,5 +23,7 @@ router.patch(
   authenticate,
   usersControllers.updatePassword
 );
+
+router.patch('/users/friends/:userID', authenticate);
 
 export = router;

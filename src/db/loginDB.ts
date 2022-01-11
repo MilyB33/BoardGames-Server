@@ -3,23 +3,19 @@ import bcrypt from 'bcrypt';
 
 import jwt, { Secret } from 'jsonwebtoken';
 import BaseError from '../utils/Error';
-import { Secrets } from '../models/models';
+import { Secrets, User, UserCollection } from '../models/models';
 
 import logging from '../config/logging';
 
-import dotenv from 'dotenv';
-
-dotenv.config();
-
 const NAMESPACE = 'loginDB';
 
-export default async function login(secrets: Secrets) {
+export default async function login(secrets: Secrets): Promise<User> {
   logging.info(NAMESPACE, 'login');
 
   const { username, password } = secrets;
 
   const db = await MongoCustomClient.connect();
-  const collection = db.collection('Users');
+  const collection = db.collection<UserCollection>('Users');
 
   const user = await collection.findOne({ username });
   if (!user) throw new BaseError('User not found', 404);
@@ -37,7 +33,6 @@ export default async function login(secrets: Secrets) {
 
   return {
     ...user,
-    password: undefined,
     token,
   };
 }

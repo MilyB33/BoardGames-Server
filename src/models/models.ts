@@ -1,4 +1,81 @@
-import { Document, WithId, ModifyResult } from 'mongodb';
+import { ObjectId } from 'mongodb';
+
+// Collections
+
+export type CollectionLimited<C, K extends keyof C> = {
+  [Key in K]: C[Key];
+};
+
+export type UserCollection = Omit<User, 'token'> & {
+  password: string;
+};
+
+export type FriendsRequest = {
+  _id: ObjectId;
+  userID: ObjectId;
+  requests: {
+    sent: ObjectId[];
+    received: ObjectId[];
+  };
+};
+
+export type EventsCollection = FullEvent;
+
+// ========================================================
+
+// User
+
+export interface UserEntry {
+  _id: ObjectId | string;
+  username: string;
+}
+
+export type User = {
+  _id: ObjectId | string;
+  username: string;
+  friends: ObjectId[];
+  friendsRequests: ObjectId[];
+  token: string;
+};
+
+export interface Secrets {
+  username: string;
+  password: string;
+}
+
+// ========================================================
+
+// Events
+
+export interface Event {
+  place: string;
+  date: string;
+  time: string;
+  game: string;
+  description: string;
+  location: string;
+  town: string;
+  maxPlayers: number;
+}
+
+export type FullEvent = Event & {
+  _id?: ObjectId; // Probably this should be required
+  createdAt: string;
+  createdBy: UserEntry;
+  signedUsers: UserEntry[];
+};
+
+export interface EventOptionally {
+  place?: string;
+  date?: string;
+  time?: string;
+  game?: string;
+  description?: string;
+}
+
+// ========================================================
+
+// Errors
 
 export interface BaseErr {
   message: string;
@@ -11,57 +88,6 @@ export enum ErrorTypes {
   Error = 'Error',
 }
 
-export interface Secrets {
-  username: string;
-  password: string;
-}
-
-export interface User {
-  id: string;
-  username: string;
-  token: string;
-}
-
-export interface Event {
-  place: string;
-  date: string;
-  time: string;
-  game: string;
-  description: string;
-}
-
-export interface EventOptionally {
-  place?: string;
-  date?: string;
-  time?: string;
-  game?: string;
-  description?: string;
-}
-
-export interface FullEvent {
-  date: string;
-  time: string;
-  game: string;
-  description: string;
-  location: string;
-  town: string;
-  createdAt: string;
-  createdBy: {
-    _id: string;
-    username: string;
-  };
-  _id: string;
-  maxPlayers: number;
-  signedUsers: {
-    _id: string;
-    username: string;
-  }[];
-}
-
-export type MongoDocument<T> = WithId<Document & T>;
+export type InsertedEvent = Omit<FullEvent, '_id'>;
 
 // ========================================================
-
-export type FullEventDocument = MongoDocument<FullEvent>;
-
-export type ModifiedEventDocument = ModifyResult;

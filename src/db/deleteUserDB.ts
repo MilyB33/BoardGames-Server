@@ -2,25 +2,31 @@ import { ObjectId } from 'mongodb';
 import logging from '../config/logging';
 import MongoCustomClient from '../clients/mongoClient';
 
+import { UserCollection, EventsCollection } from '../models/models';
+
 const NAMESPACE = 'deleteUserEventDB';
 
-export default async function deleteUserEvent(userID: string) {
+export default async function deleteUserEvent(
+  userID: string
+): Promise<void> {
   logging.debug(NAMESPACE, ' deleteUserEvent');
 
   const db = await MongoCustomClient.connect();
 
-  await db.collection('Users').deleteOne({
+  const eventsCollection = db.collection<EventsCollection>('Events');
+  const usersCollection = db.collection<UserCollection>('Users');
+
+  await usersCollection.deleteOne({
     _id: new ObjectId(userID),
   });
 
-  await db.collection('Events').deleteMany({
+  await eventsCollection.deleteMany({
     'createdBy._id': new ObjectId(userID),
   });
 
-  await db.collection('Events').updateMany(
+  await eventsCollection.updateMany(
     { signedUsers: { $elemMatch: { _id: new ObjectId(userID) } } },
     {
-      // @ts-ignore - MongoDB driver doesn't support $pull
       $pull: {
         signedUsers: { _id: new ObjectId(userID) },
       },
