@@ -1,13 +1,9 @@
 import { ObjectId } from 'mongodb';
-import MongoCustomClient from '../clients/mongoClient';
+import DBClient from '../clients/mongoClient';
 
 import logging from '../config/logging';
 import BaseError from '../utils/Error';
-import {
-  Event,
-  EventsCollection,
-  UserCollection,
-} from '../models/models';
+import { Event, EventsCollection } from '../models/models';
 
 const NAMESPACE = 'addEventDB';
 
@@ -17,10 +13,10 @@ export default async function add(
 ): Promise<EventsCollection> {
   logging.debug(NAMESPACE, `check ${ownerID}`);
 
-  const db = await MongoCustomClient.connect();
+  await DBClient.connect();
 
-  const eventsCollection = db.collection<EventsCollection>('Events');
-  const usersCollection = db.collection<UserCollection>('Users');
+  const eventsCollection = DBClient.collection.Events();
+  const usersCollection = DBClient.collection.Users();
 
   const author = await usersCollection.findOne(
     { _id: new ObjectId(ownerID) },

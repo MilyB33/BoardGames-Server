@@ -1,4 +1,4 @@
-import { ObjectId } from 'mongodb';
+import { ObjectId, Collection } from 'mongodb';
 
 // Collections
 
@@ -10,20 +10,44 @@ export type UserCollection = Omit<User, 'token'> & {
   password: string;
 };
 
-export type FriendsRequest = {
-  _id: ObjectId;
-  userID: ObjectId;
+export type EventsCollection = FullEvent;
+
+export type FriendsCollection = {
+  _id: ObjectId | string;
+  userId: ObjectId;
+  friends: UserEntry[];
   requests: {
-    sent: ObjectId[];
-    received: ObjectId[];
+    sent: UserEntry[];
+    received: UserEntry[];
   };
 };
 
-export type EventsCollection = FullEvent;
+export type CollectionsNames =
+  | 'Users'
+  | 'Events'
+  | 'Test'
+  | 'Friends';
+
+export type CollectionsTypes = {
+  Users: UserCollection;
+  Events: EventsCollection;
+  Test: any;
+};
+
+export type CollectionsLiteral = {
+  Users: () => Collection<UserCollection>;
+  Events: () => Collection<EventsCollection>;
+  Test: () => Collection<any>;
+};
 
 // ========================================================
 
 // User
+
+export type FriendsRequest = {
+  sent: UserEntry[];
+  received: UserEntry[];
+};
 
 export interface UserEntry {
   _id: ObjectId | string;
@@ -33,8 +57,8 @@ export interface UserEntry {
 export type User = {
   _id: ObjectId | string;
   username: string;
-  friends: ObjectId[];
-  friendsRequests: ObjectId[];
+  friends: UserEntry[];
+  friendsRequests: FriendsRequest;
   token: string;
 };
 
@@ -47,17 +71,6 @@ export interface Secrets {
 
 // Events
 
-export interface Event {
-  place: string;
-  date: string;
-  time: string;
-  game: string;
-  description: string;
-  location: string;
-  town: string;
-  maxPlayers: number;
-}
-
 export type FullEvent = Event & {
   _id?: ObjectId; // Probably this should be required
   createdAt: string;
@@ -65,13 +78,19 @@ export type FullEvent = Event & {
   signedUsers: UserEntry[];
 };
 
-export interface EventOptionally {
+export type EventOptionally = {
   place?: string;
   date?: string;
   time?: string;
   game?: string;
   description?: string;
-}
+};
+
+export type Event = Required<EventOptionally> & {
+  location: string;
+  town: string;
+  maxPlayers: number;
+};
 
 // ========================================================
 
@@ -89,5 +108,16 @@ export enum ErrorTypes {
 }
 
 export type InsertedEvent = Omit<FullEvent, '_id'>;
+
+// Params
+
+export type PaginationQuery = {
+  offset?: string;
+  limit?: string;
+};
+
+export type CustomQuery<T, E = {}> = {
+  [key in keyof E]: E[key];
+} & T;
 
 // ========================================================

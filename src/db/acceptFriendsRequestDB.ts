@@ -1,15 +1,18 @@
 import { ObjectId } from 'mongodb';
 import DBClient from '../clients/mongoClient';
+import logging from '../config/logging';
 import BaseError from '../utils/Error';
+
 import { mapUserEntries } from '../utils/helperFunctions';
 
-import { UserEntry } from '../models/models';
+const NAMESPACE = 'acceptFriendsRequestDB';
 
-// TODO: Rebuilding this file
 export default async function AddContact(
   userID: string,
   friendID: string
 ) {
+  logging.debug(NAMESPACE, 'getUsers');
+
   await DBClient.connect();
 
   const userCollection = DBClient.collection.Users();
@@ -29,49 +32,57 @@ export default async function AddContact(
 
   if (!requestedUser) throw new BaseError('Requested User not found');
 
-  const userId = new ObjectId(userID);
-  const requestedUserId = new ObjectId(friendID);
-
-  if (user.friends.map(mapUserEntries).includes(requestedUserId))
+  if (user.friends.map(mapUserEntries).includes(requestedUser._id))
     throw new BaseError('User already in friends list');
 
   if (
-    user.friendsRequests.sent
+    !user.friendsRequests.sent
       .map(mapUserEntries)
-      .includes(requestedUserId)
+      .includes(requestedUser._id)
   )
-    throw new BaseError('User already requested to be friends');
+    throw new BaseError('User is not requesting to be friends');
 
   if (
-    user.friendsRequests.received
+    !user.friendsRequests.received
       .map(mapUserEntries)
-      .includes(requestedUserId)
+      .includes(requestedUser._id)
   )
-    throw new BaseError('User already requested to be friends');
+    throw new BaseError('User is not requesting to be friends');
 
   await userCollection.updateOne(
-    { _id: new ObjectId(userId) },
+    { _id: new ObjectId(userID) },
     {
       $push: {
+        friends: requestedUser,
+      },
+      $pull: {
         'friendsRequests.sent': requestedUser,
+        'friendsRequests.received': requestedUser,
       },
     }
   );
 
   await userCollection.updateOne(
-    { _id: new ObjectId(requestedUserId) },
+    { _id: new ObjectId(friendID) },
     {
       $push: {
+        friends: {
+          _id: userID,
+          username: user.username,
+        },
+      },
+      $pull: {
+        'friendsRequests.sent': {
+          _id: userID,
+          username: user.username,
+        },
         'friendsRequests.received': {
-          _id: userId,
+          _id: userID,
           username: user.username,
         },
       },
     }
   );
 
-  return {
-    _id: requestedUser._id,
-    username: requestedUser.username,
-  };
+  return requestedUser;
 }

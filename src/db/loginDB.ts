@@ -1,9 +1,9 @@
-import MongoCustomClient from '../clients/mongoClient';
+import DBClient from '../clients/mongoClient';
 import bcrypt from 'bcrypt';
 
 import jwt, { Secret } from 'jsonwebtoken';
 import BaseError from '../utils/Error';
-import { Secrets, User, UserCollection } from '../models/models';
+import { Secrets, User } from '../models/models';
 
 import logging from '../config/logging';
 
@@ -14,10 +14,11 @@ export default async function login(secrets: Secrets): Promise<User> {
 
   const { username, password } = secrets;
 
-  const db = await MongoCustomClient.connect();
-  const collection = db.collection<UserCollection>('Users');
+  await DBClient.connect();
+  const collection = DBClient.collection.Users();
 
   const user = await collection.findOne({ username });
+
   if (!user) throw new BaseError('User not found', 404);
 
   const { password: hashedPassword } = user;

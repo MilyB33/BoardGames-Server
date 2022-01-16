@@ -1,10 +1,10 @@
 import { ObjectId } from 'mongodb';
-import MongoCustomClient from '../clients/mongoClient';
+import DBClient from '../clients/mongoClient';
 import logging from '../config/logging';
 
 const NAMESPACE = 'getUserEventDB';
 
-import { EventsCollection, FullEvent } from '../models/models';
+import { FullEvent } from '../models/models';
 
 export default async function getUserEvent(
   userID: string,
@@ -12,9 +12,9 @@ export default async function getUserEvent(
 ): Promise<FullEvent> {
   logging.debug(NAMESPACE, 'getUserEvent');
 
-  const db = await MongoCustomClient.connect();
+  await DBClient.connect();
 
-  const eventsCollection = db.collection<EventsCollection>('Events');
+  const eventsCollection = DBClient.collection.Events();
 
   const events = await eventsCollection.findOne({
     _id: new ObjectId(eventID),

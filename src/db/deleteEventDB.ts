@@ -1,8 +1,6 @@
 import { ObjectId } from 'mongodb';
-import MongoCustomClient from '../clients/mongoClient';
+import DBClient from '../clients/mongoClient';
 import logging from '../config/logging';
-
-import { EventsCollection } from '../models/models';
 
 const NAMESPACE = 'DeleteEventDB';
 
@@ -12,9 +10,9 @@ export default async function deleteEvent(
 ): Promise<void> {
   logging.debug(NAMESPACE, 'DeleteEventDB');
 
-  const db = await MongoCustomClient.connect();
+  await DBClient.connect();
 
-  const eventsCollection = db.collection<EventsCollection>('Events');
+  const eventsCollection = DBClient.collection.Events();
 
   await eventsCollection.deleteOne({
     _id: new ObjectId(eventID),

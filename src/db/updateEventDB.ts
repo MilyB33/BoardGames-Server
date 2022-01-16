@@ -1,12 +1,8 @@
 import { ObjectId } from 'mongodb';
-import MongoCustomClient from '../clients/mongoClient';
+import DBClient from '../clients/mongoClient';
 import BaseError from '../utils/Error';
 
-import {
-  EventOptionally,
-  EventsCollection,
-  FullEvent,
-} from '../models/models';
+import { EventOptionally, FullEvent } from '../models/models';
 
 import logging from '../config/logging';
 
@@ -19,9 +15,9 @@ export default async function updateEvent(
 ): Promise<FullEvent> {
   logging.debug(NAMESPACE, 'updateEventDB');
 
-  const db = await MongoCustomClient.connect();
+  await DBClient.connect();
 
-  const collection = db.collection<EventsCollection>('Events');
+  const collection = DBClient.collection.Events();
 
   const foundEvent = await collection.findOne({
     _id: new ObjectId(eventID),

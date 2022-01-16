@@ -1,21 +1,27 @@
-import MongoCustomClient from '../clients/mongoClient';
+import DBClient from '../clients/mongoClient';
 import logging from '../config/logging';
 
-import { UserCollection } from '../models/models';
+import { UserEntry, PaginationQuery } from '../models/models';
 
 export default async function getUsers(
-  query: any
-): Promise<Omit<UserCollection, 'password'>[]> {
+  query: PaginationQuery & { username?: string }
+): Promise<UserEntry[]> {
   logging.debug('getUsersDB', 'getUsers');
 
-  const db = await MongoCustomClient.connect();
+  await DBClient.connect();
 
-  const usersCollection = db.collection<UserCollection>('Users');
+  const { offset, limit, username } = query;
+
+  let regex = new RegExp(`${username}`, 'i');
+
+  const searchQuery = username ? { username: { $regex: regex } } : {};
+
+  const usersCollection = DBClient.collection.Users();
 
   const users = await usersCollection
-    .find({}, { projection: { password: 0 } })
-    .skip(Number(query.offset) || 0)
-    .limit(Number(query.limit) || 5)
+    .find(searchQuery, { projection: { _id: 1, username: 1 } })
+    .skip(Number(offset) || 0)
+    .limit(Number(limit) || 5)
     .toArray();
 
   return users;

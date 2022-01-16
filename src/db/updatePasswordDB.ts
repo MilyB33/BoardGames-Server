@@ -1,9 +1,7 @@
 import { ObjectId } from 'mongodb';
-import MongoCustomClient from '../clients/mongoClient';
+import DBClient from '../clients/mongoClient';
 import BaseError from '../utils/Error';
 import bcrypt from 'bcrypt';
-
-import { UserCollection } from '../models/models';
 
 export default async function updatePasswordDB(
   userID: string,
@@ -22,9 +20,9 @@ export default async function updatePasswordDB(
       400
     );
 
-  const db = await MongoCustomClient.connect();
+  await DBClient.connect();
 
-  const collection = db.collection<UserCollection>('Users');
+  const collection = DBClient.collection.Users();
 
   const foundUser = await collection.findOne({
     _id: new ObjectId(userID),

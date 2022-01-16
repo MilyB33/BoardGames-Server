@@ -1,7 +1,7 @@
-import MongoCustomClient from '../clients/mongoClient';
+import DBClient from '../clients/mongoClient';
 import bcrypt from 'bcrypt';
 import BaseError from '../utils/Error';
-import { Secrets, UserCollection } from '../models/models';
+import { Secrets } from '../models/models';
 
 import logging from '../config/logging';
 
@@ -14,11 +14,11 @@ export default async function register(
 
   const { username, password } = secrets;
 
-  const db = await MongoCustomClient.connect();
+  await DBClient.connect();
 
-  const users = db.collection<UserCollection>('Users');
+  const collection = DBClient.collection.Users();
 
-  const searchExistingUser = await users.findOne({ username });
+  const searchExistingUser = await collection.findOne({ username });
 
   if (searchExistingUser)
     throw new BaseError('User already exists', 400);
@@ -29,8 +29,11 @@ export default async function register(
     ...secrets,
     password: hashedPassword,
     friends: [],
-    friendsRequests: [],
+    friendsRequests: {
+      sent: [],
+      received: [],
+    },
   };
 
-  await users.insertOne(user);
+  await collection.insertOne(user);
 }

@@ -1,16 +1,12 @@
 import { ObjectId } from 'mongodb';
-import MongoCustomClient from '../clients/mongoClient';
+import DBClient from '../clients/mongoClient';
 import BaseError from '../utils/Error';
 
 import logging from '../config/logging';
 
 const NAMESPACE = 'SignUserForEventDB';
 
-import {
-  EventsCollection,
-  FullEvent,
-  UserCollection,
-} from '../models/models';
+import { FullEvent } from '../models/models';
 
 export default async function signUserForEvent(
   userID: string,
@@ -18,10 +14,10 @@ export default async function signUserForEvent(
 ): Promise<FullEvent> {
   logging.info(NAMESPACE, 'signUserForEvent');
 
-  const db = await MongoCustomClient.connect();
+  await DBClient.connect();
 
-  const eventsCollection = db.collection<EventsCollection>('Events');
-  const usersCollection = db.collection<UserCollection>('Users');
+  const eventsCollection = DBClient.collection.Events();
+  const usersCollection = DBClient.collection.Users();
 
   const user = await usersCollection.findOne(
     { _id: new ObjectId(userID) },

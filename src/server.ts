@@ -8,8 +8,8 @@ import headers from './middlewares/headers';
 import errorHandler from './middlewares/errorHandler';
 
 import usersRoutes from './routes/users';
-import posts from './routes/posts';
 import events from './routes/events';
+import testing from './routes/testing';
 
 const NAMESPACE = 'Server';
 
@@ -28,8 +28,8 @@ server.get('/', async (req, res: Response) => {
 
 // Routes
 server.use(usersRoutes);
-server.use(posts);
 server.use(events);
+server.use(testing);
 
 server.use(errorHandler);
 

@@ -24,6 +24,16 @@ router.patch(
   usersControllers.updatePassword
 );
 
-router.patch('/users/friends/:userID', authenticate);
+router.post(
+  '/users/:userID/friends/:friendID/request',
+  authenticate,
+  usersControllers.sendFriendsRequest
+);
+
+router.post(
+  '/users/:userID/friends/:friendID/accept',
+  authenticate,
+  usersControllers.acceptFriendsRequest
+);
 
 export = router;

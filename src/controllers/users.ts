@@ -6,6 +6,7 @@ import deleteUserDB from '../db/deleteUserDB';
 import updatePasswordDB from '../db/updatePasswordDB';
 import getUsersDB from '../db/getUsersDB';
 import friendsRequestDB from '../db/friendsRequestDB';
+import acceptFriendsRequestDB from '../db/acceptFriendsRequestDB';
 import errorHelper from '../utils/errorHelper';
 
 const getUsers = async (req: Request, res: Response) =>
@@ -69,21 +70,29 @@ const sendFriendsRequest = async (req: Request, res: Response) =>
     res,
     'Something went wrong during sending request',
     async () => {
-      await friendsRequestDB(req.params, req.query);
+      const result = await friendsRequestDB(
+        req.params.userID,
+        req.params.friendID
+      );
 
-      res.status(200).send({ message: 'Request sent', result: null });
+      res.status(200).send({ message: 'Request sent', result });
     }
   );
 
-// const addUserAsContact = async (req: Request, res: Response) =>
-//   errorHelper(
-//     req,
-//     res,
-//     'Something went wrong during adding',
-//     async () => {
-//       res.status(200).send({ message: 'User added', result: null });
-//     }
-//   );
+const acceptFriendsRequest = async (req: Request, res: Response) =>
+  errorHelper(
+    req,
+    res,
+    'Something went wrong during accepting request',
+    async () => {
+      const result = await acceptFriendsRequestDB(
+        req.params.userID,
+        req.params.friendID
+      );
+
+      res.status(200).send({ message: 'Request accepted', result });
+    }
+  );
 
 export default {
   getUsers,
@@ -92,5 +101,5 @@ export default {
   deleteUser,
   updatePassword,
   sendFriendsRequest,
-  // addUserAsContact,
+  acceptFriendsRequest,
 };
