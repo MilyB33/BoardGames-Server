@@ -7,6 +7,10 @@ import updatePasswordDB from '../db/updatePasswordDB';
 import getUsersDB from '../db/getUsersDB';
 import friendsRequestDB from '../db/friendsRequestDB';
 import acceptFriendsRequestDB from '../db/acceptFriendsRequestDB';
+import rejectFriendsRequestDB from '../db/rejectFriendsRequestDB';
+import deleteFriendDB from '../db/deleteFriendDB';
+import eventRequestDB from '../db/eventRequestDB';
+import rejectEventRequestDB from '../db/rejectEventRequestDB';
 import errorHelper from '../utils/errorHelper';
 
 const getUsers = async (req: Request, res: Response) =>
@@ -94,6 +98,66 @@ const acceptFriendsRequest = async (req: Request, res: Response) =>
     }
   );
 
+const rejectFriendsRequest = async (req: Request, res: Response) =>
+  errorHelper(
+    req,
+    res,
+    'Something went wrong during rejecting request',
+    async () => {
+      await rejectFriendsRequestDB(
+        req.params.userID,
+        req.params.friendID
+      );
+
+      res
+        .status(200)
+        .send({ message: 'Request rejected', result: null });
+    }
+  );
+
+const deleteFriend = async (req: Request, res: Response) =>
+  errorHelper(
+    req,
+    res,
+    'Something went wrong during deleting friend',
+    async () => {
+      await deleteFriendDB(req.params.userID, req.params.friendID);
+
+      res
+        .status(200)
+        .send({ message: 'Friend deleted', result: null });
+    }
+  );
+
+const eventsRequests = async (req: Request, res: Response) =>
+  errorHelper(
+    req,
+    res,
+    'Something went wrong during sending request',
+    async () => {
+      const result = await eventRequestDB(
+        req.params.userID,
+        req.body
+      );
+
+      res.status(200).send({ message: 'Request sent', result });
+    }
+  );
+
+const rejectEventRequest = async (req: Request, res: Response) =>
+  errorHelper(
+    req,
+    res,
+    'Something went wrong during rejecting request',
+    async () => {
+      await rejectEventRequestDB(req.params.userID, req.body);
+
+      res
+        .status(200)
+        .send({ message: 'Request rejected', result: null });
+    }
+  );
+
 export default {
   getUsers,
   login,
@@ -102,4 +166,8 @@ export default {
   updatePassword,
   sendFriendsRequest,
   acceptFriendsRequest,
+  rejectFriendsRequest,
+  deleteFriend,
+  eventsRequests,
+  rejectEventRequest,
 };

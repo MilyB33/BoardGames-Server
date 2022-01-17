@@ -33,6 +33,10 @@ export default async function register(
       sent: [],
       received: [],
     },
+    eventsRequests: {
+      sent: [],
+      received: [],
+    },
   };
 
   await collection.insertOne(user);

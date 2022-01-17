@@ -36,14 +36,14 @@ export default async function AddContact(
     throw new BaseError('User already in friends list');
 
   if (
-    !user.friendsRequests.sent
+    user.friendsRequests.sent
       .map(mapUserEntries)
       .includes(requestedUser._id)
   )
     throw new BaseError('User is not requesting to be friends');
 
   if (
-    !user.friendsRequests.received
+    user.friendsRequests.received
       .map(mapUserEntries)
       .includes(requestedUser._id)
   )
@@ -67,17 +67,17 @@ export default async function AddContact(
     {
       $push: {
         friends: {
-          _id: userID,
+          _id: new ObjectId(userID),
           username: user.username,
         },
       },
       $pull: {
         'friendsRequests.sent': {
-          _id: userID,
+          _id: new ObjectId(userID),
           username: user.username,
         },
         'friendsRequests.received': {
-          _id: userID,
+          _id: new ObjectId(userID),
           username: user.username,
         },
       },

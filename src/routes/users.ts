@@ -36,4 +36,28 @@ router.post(
   usersControllers.acceptFriendsRequest
 );
 
+router.delete(
+  '/users/:userID/friends/:friendID/request',
+  authenticate,
+  usersControllers.rejectFriendsRequest
+);
+
+router.delete(
+  '/users/:userID/friends/:friendID',
+  authenticate,
+  usersControllers.deleteFriend
+);
+
+router.post(
+  '/users/:userID/events/request',
+  authenticate,
+  usersControllers.eventsRequests
+);
+
+router.delete(
+  '/users/:userID/events/request',
+  authenticate,
+  usersControllers.rejectEventRequest
+);
+
 export = router;

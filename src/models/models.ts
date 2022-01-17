@@ -49,9 +49,19 @@ export type FriendsRequest = {
   received: UserEntry[];
 };
 
+export type EventsRequest = {
+  sent: EventEntry[];
+  received: EventEntry[];
+};
+
 export interface UserEntry {
   _id: ObjectId | string;
   username: string;
+}
+
+export interface EventEntry {
+  user: UserEntry;
+  eventId: ObjectId | string;
 }
 
 export type User = {
@@ -59,6 +69,7 @@ export type User = {
   username: string;
   friends: UserEntry[];
   friendsRequests: FriendsRequest;
+  eventsRequests: EventsRequest;
   token: string;
 };
 
