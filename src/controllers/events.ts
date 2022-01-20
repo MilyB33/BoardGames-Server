@@ -21,7 +21,10 @@ const getEventsAll = async (req: Request, res: Response) =>
 
 const getUserEventsAll = async (req: Request, res: Response) =>
   errorHelper(req, res, 'Something went wrong', async () => {
-    const result = await getEventsUserAllDB(req.params.userID);
+    const result = await getEventsUserAllDB(
+      req.params.userID,
+      req.query
+    );
 
     res.status(200).send({ message: 'Success', result });
   });
@@ -99,7 +102,10 @@ const signOutEvent = async (req: Request, res: Response) =>
 
 const getUserSignedEvents = async (req: Request, res: Response) =>
   errorHelper(req, res, 'Something went wrong', async () => {
-    const result = await getUserSignedEventsDB(req.params.userID);
+    const result = await getUserSignedEventsDB(
+      req.params.userID,
+      req.query
+    );
 
     res.status(200).send({ message: 'Success', result });
   });

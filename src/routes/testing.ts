@@ -3,6 +3,6 @@ import controllers from '../controllers/testing';
 
 const router = Router();
 
-router.get('/testing', controllers.testing);
+router.post('/testing', controllers.testing);
 
 export = router;

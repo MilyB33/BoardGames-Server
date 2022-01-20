@@ -1,7 +1,12 @@
 import { ObjectId } from 'mongodb';
 import DBClient from '../clients/mongoClient';
 import BaseError from '../utils/Error';
-import { mapUserEntries } from '../utils/helperFunctions';
+import {
+  mapUserEntries,
+  sortUsersInOrder,
+} from '../utils/helperFunctions';
+
+import { User } from '../models/models';
 
 interface Body {
   requestedUserID: string;
@@ -17,54 +22,97 @@ export default async function eventRequest(
   await DBClient.connect();
 
   const userCollection = DBClient.collection.Users();
+  const eventsCollection = DBClient.collection.Events();
 
-  const user = await userCollection.findOne(
+  const usersIDs = [
+    new ObjectId(userID),
+    new ObjectId(requestedUserID),
+  ];
+
+  const cursor = userCollection.aggregate<User>([
     {
-      _id: new ObjectId(userID),
+      $match: {
+        _id: { $in: usersIDs },
+      },
     },
-    { projection: { _id: 1, username: 1 } }
-  );
-
-  if (!user) throw new BaseError('User not found');
-
-  const requestedUser = await userCollection.findOne(
     {
-      _id: new ObjectId(requestedUserID),
-    },
-    { projection: { _id: 1, username: 1 } }
-  );
-
-  if (!requestedUser) throw new BaseError('Requested User not found');
-
-  if (!user.friends.map(mapUserEntries).includes(requestedUser._id))
-    throw new BaseError('User not in friends list');
-
-  await userCollection.updateOne(
-    { _id: new ObjectId(userID) },
-    {
-      $push: {
-        'eventsRequests.sent': {
-          user: requestedUser,
-          eventId: new ObjectId(eventID),
+      $project: {
+        _id: 1,
+        username: 1,
+        friends: {
+          $cond: {
+            if: { $eq: ['$_id', new ObjectId(userID)] },
+            then: '$friends',
+            else: '$$REMOVE',
+          },
         },
       },
-    }
+    },
+  ]);
+
+  const users = sortUsersInOrder<User>(
+    await cursor.toArray(),
+    usersIDs
   );
 
-  await userCollection.updateOne(
-    { _id: new ObjectId(requestedUserID) },
+  if (!users[0]) throw new BaseError('User not found');
+
+  if (!users[1]) throw new BaseError('Requested User not found');
+
+  const { friends } = users[0];
+
+  if (!friends.map(mapUserEntries).includes(users[1]._id.toString()))
+    throw new BaseError('User not in friends list');
+
+  await userCollection.bulkWrite([
+    {
+      updateOne: {
+        filter: {
+          _id: new ObjectId(userID),
+        },
+        update: {
+          $push: {
+            'eventsRequests.sent': {
+              eventId: new ObjectId(eventID),
+              user: new ObjectId(userID),
+              invitedUser: new ObjectId(requestedUserID),
+            },
+          },
+        },
+      },
+    },
+    {
+      updateOne: {
+        filter: {
+          _id: new ObjectId(requestedUserID),
+        },
+        update: {
+          $push: {
+            'eventsRequests.received': {
+              eventId: new ObjectId(eventID),
+              user: new ObjectId(userID),
+              invitedUser: new ObjectId(requestedUserID),
+            },
+          },
+        },
+      },
+    },
+  ]);
+
+  await eventsCollection.updateOne(
+    {
+      _id: new ObjectId(eventID),
+    },
     {
       $push: {
-        'eventsRequests.received': {
-          user: user,
-          eventId: new ObjectId(eventID),
-        },
+        invitedUsers: new ObjectId(requestedUserID),
       },
     }
   );
 
   return {
-    user: requestedUser,
+    user: users[0],
     eventId: eventID,
+    invitedUser: users[1],
   };
 }

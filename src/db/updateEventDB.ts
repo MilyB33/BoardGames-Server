@@ -26,20 +26,16 @@ export default async function updateEvent(
 
   if (!foundEvent) throw new BaseError('Event not found', 404);
 
-  await collection.updateOne(
+  const result = await collection.findOneAndUpdate(
     {
       _id: new ObjectId(eventID),
       'createdBy._id': new ObjectId(userID),
     },
-    { $set: { ...event } }
+    { $set: { ...event } },
+    { returnDocument: 'after' }
   );
 
-  const result = await collection.findOne({
-    _id: new ObjectId(eventID),
-    'createdBy._id': new ObjectId(userID),
-  });
+  if (!result.value) throw new BaseError('Event not found', 404);
 
-  if (!result) throw new BaseError('Event not found', 404);
-
-  return result;
+  return result.value;
 }

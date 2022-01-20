@@ -3,7 +3,12 @@ import DBClient from '../clients/mongoClient';
 import logging from '../config/logging';
 import BaseError from '../utils/Error';
 
-import { mapUserEntries } from '../utils/helperFunctions';
+import {
+  mapUserEntries,
+  sortUsersInOrder,
+} from '../utils/helperFunctions';
+
+import { User } from '../models/models';
 
 const NAMESPACE = 'acceptFriendsRequestDB';
 
@@ -17,72 +22,89 @@ export default async function AddContact(
 
   const userCollection = DBClient.collection.Users();
 
-  const user = await userCollection.findOne({
-    _id: new ObjectId(userID),
-  });
+  const usersIDs = [new ObjectId(userID), new ObjectId(friendID)];
 
-  if (!user) throw new BaseError('User not found');
-
-  const requestedUser = await userCollection.findOne(
+  const cursor = userCollection.aggregate<User>([
     {
-      _id: new ObjectId(friendID),
+      $match: {
+        _id: { $in: usersIDs },
+      },
     },
-    { projection: { _id: 1, username: 1 } }
+    {
+      $project: {
+        _id: 1,
+        username: 1,
+        friends: {
+          $cond: {
+            if: { $eq: ['$_id', new ObjectId(userID)] },
+            then: '$friends',
+            else: '$$REMOVE',
+          },
+        },
+        friendsRequests: {
+          $cond: {
+            if: { $eq: ['$_id', new ObjectId(userID)] },
+            then: '$friendsRequests',
+            else: '$$REMOVE',
+          },
+        },
+      },
+    },
+  ]);
+
+  const users = sortUsersInOrder<User>(
+    await cursor.toArray(),
+    usersIDs
   );
 
-  if (!requestedUser) throw new BaseError('Requested User not found');
+  if (!users[0]) throw new BaseError('User not found');
 
-  if (user.friends.map(mapUserEntries).includes(requestedUser._id))
+  if (!users[1]) throw new BaseError('Requested User not found');
+
+  const {
+    friends,
+    friendsRequests: { received },
+  } = users[0];
+
+  if (friends.map(mapUserEntries).includes(users[1]._id.toString()))
     throw new BaseError('User already in friends list');
 
-  if (
-    user.friendsRequests.sent
-      .map(mapUserEntries)
-      .includes(requestedUser._id)
-  )
+  if (!received.map(mapUserEntries).includes(users[1]._id.toString()))
     throw new BaseError('User is not requesting to be friends');
 
-  if (
-    user.friendsRequests.received
-      .map(mapUserEntries)
-      .includes(requestedUser._id)
-  )
-    throw new BaseError('User is not requesting to be friends');
+  const userId = users[0]._id;
+  const requestedUserId = users[1]._id;
 
-  await userCollection.updateOne(
-    { _id: new ObjectId(userID) },
+  await userCollection.bulkWrite([
     {
-      $push: {
-        friends: requestedUser,
+      updateOne: {
+        filter: { _id: userId },
+        update: {
+          $push: {
+            friends: requestedUserId,
+          },
+          $pull: {
+            'friendsRequests.sent': requestedUserId,
+            'friendsRequests.received': requestedUserId,
+          },
+        },
       },
-      $pull: {
-        'friendsRequests.sent': requestedUser,
-        'friendsRequests.received': requestedUser,
-      },
-    }
-  );
-
-  await userCollection.updateOne(
-    { _id: new ObjectId(friendID) },
+    },
     {
-      $push: {
-        friends: {
-          _id: new ObjectId(userID),
-          username: user.username,
+      updateOne: {
+        filter: { _id: requestedUserId },
+        update: {
+          $push: {
+            friends: userId,
+          },
+          $pull: {
+            'friendsRequests.sent': userId,
+            'friendsRequests.received': userId,
+          },
         },
       },
-      $pull: {
-        'friendsRequests.sent': {
-          _id: new ObjectId(userID),
-          username: user.username,
-        },
-        'friendsRequests.received': {
-          _id: new ObjectId(userID),
-          username: user.username,
-        },
-      },
-    }
-  );
+    },
+  ]);
 
-  return requestedUser;
+  return users[1];
 }

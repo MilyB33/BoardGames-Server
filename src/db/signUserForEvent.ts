@@ -38,20 +38,18 @@ export default async function signUserForEvent(
       400
     );
 
-  if (event.signedUsers.includes(user)) {
+  if (event.signedUsers.includes(user._id)) {
     throw new BaseError('User already signed for this event', 400);
   }
 
-  await eventsCollection.updateOne(
+  const updatedEvent = await eventsCollection.findOneAndUpdate(
     { _id: new ObjectId(eventID) },
-    { $push: { signedUsers: user } }
+    { $push: { signedUsers: new ObjectId(user._id) } },
+    { returnDocument: 'after' }
   );
 
-  const updatedEvent = await eventsCollection.findOne({
-    _id: new ObjectId(eventID),
-  });
+  if (!updatedEvent.value)
+    throw new BaseError('Event not found', 404);
 
-  if (!updatedEvent) throw new BaseError('Event not found', 404);
-
-  return updatedEvent;
+  return updatedEvent.value;
 }

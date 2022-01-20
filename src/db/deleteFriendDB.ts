@@ -3,7 +3,12 @@ import DBClient from '../clients/mongoClient';
 import logging from '../config/logging';
 import BaseError from '../utils/Error';
 
-import { mapUserEntries } from '../utils/helperFunctions';
+import {
+  mapUserEntries,
+  sortUsersInOrder,
+} from '../utils/helperFunctions';
+
+import { User } from '../models/models';
 
 const NAMESPACE = 'deleteFriendDB';
 
@@ -17,42 +22,70 @@ export default async function deleteFriend(
 
   const userCollection = DBClient.collection.Users();
 
-  const user = await userCollection.findOne({
-    _id: new ObjectId(userID),
-  });
+  const userIDs = [new ObjectId(userID), new ObjectId(friendID)];
 
-  if (!user) throw new BaseError('User not found');
-
-  const requestedUser = await userCollection.findOne(
+  const cursor = userCollection.aggregate<User>([
     {
-      _id: new ObjectId(friendID),
-    },
-    { projection: { _id: 1, username: 1 } }
-  );
-
-  if (!requestedUser) throw new BaseError('User not found');
-
-  // if (!user.friends.map(mapUserEntries).includes(requestedUser._id)) // check this
-  //   throw new BaseError('User not in friends list');
-
-  await userCollection.updateOne(
-    { _id: new ObjectId(userID) },
-    {
-      $pull: {
-        friends: requestedUser,
+      $match: {
+        _id: { $in: userIDs },
       },
-    }
-  );
-
-  await userCollection.updateOne(
-    { _id: new ObjectId(friendID) },
+    },
     {
-      $pull: {
+      $project: {
+        _id: 1,
+        username: 1,
         friends: {
-          _id: new ObjectId(userID),
-          username: user.username,
+          $cond: {
+            if: { $eq: ['$_id', new ObjectId(userID)] },
+            then: '$friends',
+            else: '$$REMOVE',
+          },
+        },
+        friendsRequests: {
+          $cond: {
+            if: { $eq: ['$_id', new ObjectId(userID)] },
+            then: '$friendsRequests',
+            else: '$$REMOVE',
+          },
         },
       },
-    }
+    },
+  ]);
+
+  const users = sortUsersInOrder<User>(
+    await cursor.toArray(),
+    userIDs
   );
+
+  if (!users[0] || !users[1]) throw new BaseError('User not found');
+
+  if (
+    !users[0].friends
+      .map(mapUserEntries)
+      .includes(users[1]._id.toString())
+  )
+    throw new BaseError('User not in friends list');
+
+  await userCollection.bulkWrite([
+    {
+      updateOne: {
+        filter: { _id: users[0]._id },
+        update: {
+          $pull: {
+            friends: users[1]._id,
+          },
+        },
+      },
+    },
+    {
+      updateOne: {
+        filter: { _id: users[1]._id },
+        update: {
+          $pull: {
+            friends: users[0]._id,
+          },
+        },
+      },
+    },
+  ]);
 }

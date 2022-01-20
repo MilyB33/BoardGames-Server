@@ -18,16 +18,25 @@ export default async function deleteUserEvent(
     _id: new ObjectId(userID),
   });
 
-  await eventsCollection.deleteMany({
-    'createdBy._id': new ObjectId(userID),
-  });
-
-  await eventsCollection.updateMany(
-    { signedUsers: { $elemMatch: { _id: new ObjectId(userID) } } },
+  await eventsCollection.bulkWrite([
     {
-      $pull: {
-        signedUsers: { _id: new ObjectId(userID) },
+      deleteMany: {
+        filter: {
+          'createdBy._id': new ObjectId(userID),
+        },
       },
-    }
-  );
+    },
+    {
+      updateMany: {
+        filter: {
+          signedUsers: { $elemMatch: new ObjectId(userID) },
+        },
+        update: {
+          $pull: {
+            signedUsers: new ObjectId(userID),
+          },
+        },
+      },
+    },
+  ]);
 }

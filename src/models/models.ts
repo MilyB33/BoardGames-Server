@@ -45,13 +45,13 @@ export type CollectionsLiteral = {
 // User
 
 export type FriendsRequest = {
-  sent: UserEntry[];
-  received: UserEntry[];
+  sent: ID[];
+  received: ID[];
 };
 
 export type EventsRequest = {
-  sent: EventEntry[];
-  received: EventEntry[];
+  sent: ID[];
+  received: ID[];
 };
 
 export interface UserEntry {
@@ -60,17 +60,26 @@ export interface UserEntry {
 }
 
 export interface EventEntry {
-  user: UserEntry;
-  eventId: ObjectId | string;
+  eventId: ID;
+  user: ID;
+  invitedUser: ID;
 }
+
+export type ID = string | ObjectId;
 
 export type User = {
   _id: ObjectId | string;
   username: string;
-  friends: UserEntry[];
+  friends: ID[];
   friendsRequests: FriendsRequest;
   eventsRequests: EventsRequest;
   token: string;
+};
+
+export type UserWithEvents = User & {
+  userEvents: Event[];
+  userSignedEvents: Event[];
+  password: string;
 };
 
 export interface Secrets {
@@ -86,7 +95,8 @@ export type FullEvent = Event & {
   _id?: ObjectId; // Probably this should be required
   createdAt: string;
   createdBy: UserEntry;
-  signedUsers: UserEntry[];
+  signedUsers: ID[];
+  invitedUsers: ID[];
 };
 
 export type EventOptionally = {

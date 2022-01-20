@@ -29,7 +29,8 @@ export default async function add(
     ...event,
     createdBy: author,
     createdAt: new Date().toISOString(),
-    signedUsers: [author],
+    signedUsers: [author._id],
+    invitedUsers: [],
   };
 
   const _id = await eventsCollection

@@ -12,17 +12,34 @@ export default async function getEventsAllDB(
 
   const { offset, limit } = query;
 
-  console.log(typeof query.offset);
-
   await DBClient.connect();
 
   const eventsCollection = DBClient.collection.Events();
 
   const events = await eventsCollection
-    .find({})
-    .skip(Number(offset) || 0)
-    .limit(Number(limit) || 5)
+    .aggregate<FullEvent>([
+      { $skip: offset ? parseInt(offset) : 0 },
+      { $limit: limit ? parseInt(limit) : 0 },
+      {
+        $lookup: {
+          from: 'Users',
+          let: { signedUsers: '$signedUsers' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ['$_id', '$$signedUsers'],
+                },
+              },
+            },
+          ],
+          as: 'signedUsers',
+        },
+      },
+    ])
     .toArray();
+
+  console.log(events);
 
   return events;
 }

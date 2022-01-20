@@ -37,22 +37,18 @@ export default async function signUserForEvent(
     );
 
   if (
-    !event.signedUsers
-      .map((user) => user._id.toString())
-      .includes(userID)
+    !event.signedUsers.map((user) => user.toString()).includes(userID)
   )
     throw new BaseError('User not signed for this event', 400);
 
-  await eventsCollection.updateOne(
+  let updatedEvent = await eventsCollection.findOneAndUpdate(
     { _id: new ObjectId(eventID) },
-    { $pull: { signedUsers: user } }
+    { $pull: { signedUsers: user } },
+    { returnDocument: 'after' }
   );
 
-  const updatedEvent = await eventsCollection.findOne({
-    _id: new ObjectId(eventID),
-  });
+  if (!updatedEvent.value)
+    throw new BaseError('Event not found', 404);
 
-  if (!updatedEvent) throw new BaseError('Event not found', 404);
-
-  return updatedEvent;
+  return updatedEvent.value;
 }

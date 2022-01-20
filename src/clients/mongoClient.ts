@@ -1,4 +1,4 @@
-import { MongoClient, Db } from 'mongodb';
+import { MongoClient, Db, Collection } from 'mongodb';
 import logging from '../config/logging';
 import BaseError from '../utils/Error';
 
@@ -36,7 +36,6 @@ class MongoCustomClient {
   collection = {
     Users: () =>
       this.database?.collection<CollectionsTypes['Users']>('Users'),
-
     Events: () =>
       this.database?.collection<CollectionsTypes['Events']>('Events'),
     Test: () =>
