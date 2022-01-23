@@ -40,6 +40,10 @@ class MongoCustomClient {
       this.database?.collection<CollectionsTypes['Events']>('Events'),
     Test: () =>
       this.database?.collection<CollectionsTypes['Test']>('Test'),
+    EventInvites: () =>
+      this.database?.collection<CollectionsTypes['EventInvites']>(
+        'EventInvites'
+      ),
   } as CollectionsLiteral;
 
   close() {

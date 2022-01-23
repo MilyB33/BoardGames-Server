@@ -19,7 +19,7 @@ export default async function signUserForEvent(
 
   const user = await userCollection.findOne(
     { _id: new ObjectId(userID) },
-    { projection: { username: 1 } }
+    { projection: { _id: 1 } }
   );
 
   if (!user) throw new BaseError('User not found', 404);
@@ -43,7 +43,7 @@ export default async function signUserForEvent(
 
   let updatedEvent = await eventsCollection.findOneAndUpdate(
     { _id: new ObjectId(eventID) },
-    { $pull: { signedUsers: user } },
+    { $pull: { signedUsers: user._id } },
     { returnDocument: 'after' }
   );
 

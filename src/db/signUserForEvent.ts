@@ -21,7 +21,7 @@ export default async function signUserForEvent(
 
   const user = await usersCollection.findOne(
     { _id: new ObjectId(userID) },
-    { projection: { username: 1 } }
+    { projection: { _id: 1 } }
   );
 
   if (!user) throw new BaseError('User not found', 404);

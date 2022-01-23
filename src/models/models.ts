@@ -26,21 +26,35 @@ export type CollectionsNames =
   | 'Users'
   | 'Events'
   | 'Test'
-  | 'Friends';
+  | 'Friends'
+  | 'EventInvites';
 
 export type CollectionsTypes = {
   Users: UserCollection;
   Events: EventsCollection;
   Test: any;
+  EventInvites: any;
 };
 
 export type CollectionsLiteral = {
   Users: () => Collection<UserCollection>;
   Events: () => Collection<EventsCollection>;
   Test: () => Collection<any>;
+  EventInvites: () => Collection<EventInvitesCollection>;
 };
 
 // ========================================================
+
+// EventsInvites
+
+export type EventInvitesCollection = {
+  _id: ObjectId;
+  eventId: ObjectId;
+  users: {
+    sent: ID;
+    received: ID;
+  };
+};
 
 // User
 
@@ -76,16 +90,24 @@ export type User = {
   token: string;
 };
 
-export type UserWithEvents = User & {
-  userEvents: Event[];
-  userSignedEvents: Event[];
-  password: string;
-};
-
 export interface Secrets {
   username: string;
   password: string;
 }
+
+export interface UserInfo {
+  friends: ID[];
+  friendsRequests: FriendsRequest;
+  eventsRequests: EventsRequest;
+  events: {
+    userEvents: Event[];
+    userSignedEvents: Event[];
+  };
+}
+
+export type LoginData = UserEntry & {
+  token: string;
+};
 
 // ========================================================
 
@@ -96,7 +118,7 @@ export type FullEvent = Event & {
   createdAt: string;
   createdBy: UserEntry;
   signedUsers: ID[];
-  invitedUsers: ID[];
+  invites: ID[];
 };
 
 export type EventOptionally = {

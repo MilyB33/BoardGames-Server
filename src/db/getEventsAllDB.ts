@@ -32,14 +32,45 @@ export default async function getEventsAllDB(
                 },
               },
             },
+            {
+              $project: {
+                _id: 1,
+                username: 1,
+              },
+            },
           ],
           as: 'signedUsers',
         },
       },
+      {
+        $lookup: {
+          from: 'EventInvites',
+          let: { eventId: '$_eventId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$eventID', '$$eventId'],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                'users.received': 1,
+              },
+            },
+          ],
+          as: 'invites',
+        },
+      },
+      {
+        $set: {
+          invites: { $concatArrays: ['$invites.users.received'] },
+        },
+      },
     ])
     .toArray();
-
-  console.log(events);
 
   return events;
 }

@@ -20,7 +20,7 @@ export default async function getEventsUserAll(
 
   const events = await eventsCollection
     .aggregate<FullEvent>([
-      { $match: { createdBy: { _id: new ObjectId(userID) } } },
+      { $match: { $expr: { $eq: ['$createdBy._id', userID] } } },
       { $skip: offset ? parseInt(offset) : 0 },
       { $limit: limit ? parseInt(limit) : 0 },
       {
@@ -35,8 +35,41 @@ export default async function getEventsUserAll(
                 },
               },
             },
+            {
+              $project: {
+                _id: 1,
+                username: 1,
+              },
+            },
           ],
           as: 'signedUsers',
+        },
+      },
+      {
+        $lookup: {
+          from: 'EventInvites',
+          let: { eventId: '$_eventId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$eventID', '$$eventId'],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                'users.received': 1,
+              },
+            },
+          ],
+          as: 'invites',
+        },
+      },
+      {
+        $set: {
+          invites: { $concatArrays: ['$invites.users.received'] },
         },
       },
     ])

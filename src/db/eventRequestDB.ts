@@ -23,6 +23,7 @@ export default async function eventRequest(
 
   const userCollection = DBClient.collection.Users();
   const eventsCollection = DBClient.collection.Events();
+  const eventInvitesCollection = DBClient.collection.EventInvites();
 
   const usersIDs = [
     new ObjectId(userID),
@@ -64,6 +65,14 @@ export default async function eventRequest(
   if (!friends.map(mapUserEntries).includes(users[1]._id.toString()))
     throw new BaseError('User not in friends list');
 
+  const insertedID = await eventInvitesCollection.insertOne({
+    eventId: new ObjectId(eventID),
+    users: {
+      sent: new ObjectId(userID),
+      received: new ObjectId(requestedUserID),
+    },
+  });
+
   await userCollection.bulkWrite([
     {
       updateOne: {
@@ -72,11 +81,9 @@ export default async function eventRequest(
         },
         update: {
           $push: {
-            'eventsRequests.sent': {
-              eventId: new ObjectId(eventID),
-              user: new ObjectId(userID),
-              invitedUser: new ObjectId(requestedUserID),
-            },
+            'eventsRequests.sent': new ObjectId(
+              insertedID.insertedId
+            ),
           },
         },
       },
@@ -88,11 +95,9 @@ export default async function eventRequest(
         },
         update: {
           $push: {
-            'eventsRequests.received': {
-              eventId: new ObjectId(eventID),
-              user: new ObjectId(userID),
-              invitedUser: new ObjectId(requestedUserID),
-            },
+            'eventsRequests.received': new ObjectId(
+              insertedID.insertedId
+            ),
           },
         },
       },
@@ -105,14 +110,17 @@ export default async function eventRequest(
     },
     {
       $push: {
-        invitedUsers: new ObjectId(requestedUserID),
+        invites: new ObjectId(insertedID.insertedId),
       },
     }
   );
 
   return {
-    user: users[0],
+    _id: insertedID.insertedId,
     eventId: eventID,
-    invitedUser: users[1],
+    user: {
+      _id: users[1]._id,
+      username: users[1].username,
+    },
   };
 }

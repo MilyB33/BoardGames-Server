@@ -1,13 +1,11 @@
-import { ObjectId } from 'mongodb';
-import logging from '../config/logging';
-import DBClient from '../clients/mongoClient';
+import { ObjectId } from "mongodb";
+import logging from "../config/logging";
+import DBClient from "../clients/mongoClient";
 
-const NAMESPACE = 'deleteUserEventDB';
+const NAMESPACE = "deleteUserEventDB";
 
-export default async function deleteUserEvent(
-  userID: string
-): Promise<void> {
-  logging.debug(NAMESPACE, ' deleteUserEvent');
+export default async function deleteUserEvent(userID: string): Promise<void> {
+  logging.debug(NAMESPACE, " deleteUserEvent");
 
   await DBClient.connect();
 
@@ -19,23 +17,13 @@ export default async function deleteUserEvent(
   });
 
   await eventsCollection.bulkWrite([
-    {
-      deleteMany: {
-        filter: {
-          'createdBy._id': new ObjectId(userID),
-        },
-      },
-    },
+    { deleteMany: { filter: { "createdBy._id": new ObjectId(userID) } } },
     {
       updateMany: {
         filter: {
           signedUsers: { $elemMatch: new ObjectId(userID) },
         },
-        update: {
-          $pull: {
-            signedUsers: new ObjectId(userID),
-          },
-        },
+        update: { $pull: { signedUsers: new ObjectId(userID) } },
       },
     },
   ]);

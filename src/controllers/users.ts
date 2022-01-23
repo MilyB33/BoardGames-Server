@@ -1,167 +1,115 @@
-import { Request, Response } from 'express';
+import { Request, Response } from "express";
 
-import loginDB from '../db/loginDB';
-import registerDB from '../db/registerDB';
-import deleteUserDB from '../db/deleteUserDB';
-import updatePasswordDB from '../db/updatePasswordDB';
-import getUsersDB from '../db/getUsersDB';
-import friendsRequestDB from '../db/friendsRequestDB';
-import acceptFriendsRequestDB from '../db/acceptFriendsRequestDB';
-import rejectFriendsRequestDB from '../db/rejectFriendsRequestDB';
-import deleteFriendDB from '../db/deleteFriendDB';
-import eventRequestDB from '../db/eventRequestDB';
-import rejectEventRequestDB from '../db/rejectEventRequestDB';
-import errorHelper from '../utils/errorHelper';
+import loginDB from "../db/loginDB";
+import registerDB from "../db/registerDB";
+import deleteUserDB from "../db/deleteUserDB";
+import updatePasswordDB from "../db/updatePasswordDB";
+import getUsersDB from "../db/getUsersDB";
+import friendsRequestDB from "../db/friendsRequestDB";
+import acceptFriendsRequestDB from "../db/acceptFriendsRequestDB";
+import rejectFriendsRequestDB from "../db/rejectFriendsRequestDB";
+import deleteFriendDB from "../db/deleteFriendDB";
+import eventRequestDB from "../db/eventRequestDB";
+import rejectEventRequestDB from "../db/rejectEventRequestDB";
+import acceptEventRequestDB from "../db/acceptEventRequestDB";
+import getUserInfoDB from "../db/getUserInfoDB";
+import errorHelper from "../utils/errorHelper";
 
 const getUsers = async (req: Request, res: Response) =>
-  errorHelper(req, res, 'Error getting users', async () => {
+  errorHelper(req, res, "Error getting users", async () => {
     const result = await getUsersDB(req.query);
 
-    res.status(200).send({ message: 'Users retrieved', result });
+    res.status(200).send({ message: "Users retrieved", result });
   });
 
 const login = async (req: Request, res: Response) =>
-  errorHelper(
-    req,
-    res,
-    'Something went wrong during logging in',
-    async () => {
-      const result = await loginDB(req.body);
+  errorHelper(req, res, "Something went wrong during logging in", async () => {
+    const result = await loginDB(req.body);
 
-      res.status(200).send({ message: 'User logged in', result });
-    }
-  );
+    res.status(200).send({ message: "User logged in", result });
+  });
 
 const register = async (req: Request, res: Response) =>
-  errorHelper(
-    req,
-    res,
-    'Something went wrong during registration',
-    async () => {
-      await registerDB(req.body);
+  errorHelper(req, res, "Something went wrong during registration", async () => {
+    await registerDB(req.body);
 
-      res.status(200).send({ message: 'User created', result: null });
-    }
-  );
+    res.status(200).send({ message: "User created", result: null });
+  });
+const getUserInfo = async (req: Request, res: Response) =>
+  errorHelper(req, res, "Something went wrong during getting user info", async () => {
+    const result = await getUserInfoDB(req.params.userID);
+
+    res.status(200).send({ message: "User info retrieved", result });
+  });
 
 const deleteUser = async (req: Request, res: Response) =>
-  errorHelper(
-    req,
-    res,
-    'Something went wrong during deleting',
-    async () => {
-      await deleteUserDB(req.params.userID);
+  errorHelper(req, res, "Something went wrong during deleting", async () => {
+    await deleteUserDB(req.params.userID);
 
-      res.status(200).send({ message: 'User deleted', result: null });
-    }
-  );
+    res.status(200).send({ message: "User deleted", result: null });
+  });
 
 const updatePassword = async (req: Request, res: Response) =>
-  errorHelper(
-    req,
-    res,
-    'Something went wrong during updating',
-    async () => {
-      await updatePasswordDB(req.params.userID, req.body);
+  errorHelper(req, res, "Something went wrong during updating", async () => {
+    await updatePasswordDB(req.params.userID, req.body);
 
-      res.status(200).send({ message: 'User updated', result: null });
-    }
-  );
+    res.status(200).send({ message: "User updated", result: null });
+  });
 
 const sendFriendsRequest = async (req: Request, res: Response) =>
-  errorHelper(
-    req,
-    res,
-    'Something went wrong during sending request',
-    async () => {
-      const result = await friendsRequestDB(
-        req.params.userID,
-        req.params.friendID
-      );
+  errorHelper(req, res, "Something went wrong during sending request", async () => {
+    const result = await friendsRequestDB(req.params.userID, req.params.friendID);
 
-      res.status(200).send({ message: 'Request sent', result });
-    }
-  );
+    res.status(200).send({ message: "Request sent", result });
+  });
 
 const acceptFriendsRequest = async (req: Request, res: Response) =>
-  errorHelper(
-    req,
-    res,
-    'Something went wrong during accepting request',
-    async () => {
-      const result = await acceptFriendsRequestDB(
-        req.params.userID,
-        req.params.friendID
-      );
+  errorHelper(req, res, "Something went wrong during accepting request", async () => {
+    const result = await acceptFriendsRequestDB(req.params.userID, req.params.friendID);
 
-      res.status(200).send({ message: 'Request accepted', result });
-    }
-  );
+    res.status(200).send({ message: "Request accepted", result });
+  });
 
 const rejectFriendsRequest = async (req: Request, res: Response) =>
-  errorHelper(
-    req,
-    res,
-    'Something went wrong during rejecting request',
-    async () => {
-      await rejectFriendsRequestDB(
-        req.params.userID,
-        req.params.friendID
-      );
+  errorHelper(req, res, "Something went wrong during rejecting request", async () => {
+    await rejectFriendsRequestDB(req.params.userID, req.params.friendID);
 
-      res
-        .status(200)
-        .send({ message: 'Request rejected', result: null });
-    }
-  );
+    res.status(200).send({ message: "Request rejected", result: null });
+  });
 
 const deleteFriend = async (req: Request, res: Response) =>
-  errorHelper(
-    req,
-    res,
-    'Something went wrong during deleting friend',
-    async () => {
-      await deleteFriendDB(req.params.userID, req.params.friendID);
+  errorHelper(req, res, "Something went wrong during deleting friend", async () => {
+    await deleteFriendDB(req.params.userID, req.params.friendID);
 
-      res
-        .status(200)
-        .send({ message: 'Friend deleted', result: null });
-    }
-  );
+    res.status(200).send({ message: "Friend deleted", result: null });
+  });
 
 const eventsRequests = async (req: Request, res: Response) =>
-  errorHelper(
-    req,
-    res,
-    'Something went wrong during sending request',
-    async () => {
-      const result = await eventRequestDB(
-        req.params.userID,
-        req.body
-      );
+  errorHelper(req, res, "Something went wrong during sending request", async () => {
+    const result = await eventRequestDB(req.params.userID, req.body);
 
-      res.status(200).send({ message: 'Request sent', result });
-    }
-  );
+    res.status(200).send({ message: "Request sent", result });
+  });
 
 const rejectEventRequest = async (req: Request, res: Response) =>
-  errorHelper(
-    req,
-    res,
-    'Something went wrong during rejecting request',
-    async () => {
-      await rejectEventRequestDB(req.params.userID, req.body);
+  errorHelper(req, res, "Something went wrong during rejecting request", async () => {
+    await rejectEventRequestDB(req.params.inviteId);
 
-      res
-        .status(200)
-        .send({ message: 'Request rejected', result: null });
-    }
-  );
+    res.status(200).send({ message: "Request rejected", result: null });
+  });
+
+const acceptEventRequest = async (req: Request, res: Response) =>
+  errorHelper(req, res, "Something went wrong during accepting request", async () => {
+    const result = await acceptEventRequestDB(req.params.inviteId);
+
+    res.status(200).send({ message: "Request accepted", result });
+  });
 
 export default {
   getUsers,
   login,
   register,
+  getUserInfo,
   deleteUser,
   updatePassword,
   sendFriendsRequest,
@@ -170,4 +118,5 @@ export default {
   deleteFriend,
   eventsRequests,
   rejectEventRequest,
+  acceptEventRequest,
 };
