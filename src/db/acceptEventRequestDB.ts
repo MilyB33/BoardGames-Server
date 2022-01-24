@@ -1,12 +1,12 @@
-import { ObjectId } from "mongodb";
-import DBClient from "../clients/mongoClient";
-import BaseError from "../utils/Error";
-import logging from "../config/logging";
+import { ObjectId } from 'mongodb';
+import DBClient from '../clients/mongoClient';
+import BaseError from '../utils/Error';
+import logging from '../config/logging';
 
-const NAMESPACE = "acceptEventRequestDB";
+const NAMESPACE = 'acceptEventRequestDB';
 
 export default async function acceptEventRequest(inviteId: string) {
-  logging.info(NAMESPACE, "acceptEventRequest");
+  logging.info(NAMESPACE, 'acceptEventRequest');
 
   await DBClient.connect();
 
@@ -18,15 +18,14 @@ export default async function acceptEventRequest(inviteId: string) {
     _id: new ObjectId(inviteId),
   });
 
-  if (!invite) throw new BaseError("Invite not found", 404);
+  if (!invite) throw new BaseError('Invite not found', 404);
 
-  await eventsCollection.findOneAndUpdate(
+  const updatedId = await eventsCollection.updateOne(
     { _id: new ObjectId(invite.eventId) },
     {
       $pull: { invites: new ObjectId(inviteId) },
       $push: { signedUsers: new ObjectId(invite.users.received) },
-    },
-    { returnDocument: "after" }
+    }
   );
 
   await userCollection.bulkWrite([
@@ -34,7 +33,7 @@ export default async function acceptEventRequest(inviteId: string) {
       updateOne: {
         filter: { _id: new ObjectId(invite.users.sent) },
         update: {
-          $pull: { "eventsRequests.sent": new ObjectId(inviteId) },
+          $pull: { 'eventsRequests.sent': new ObjectId(inviteId) },
         },
       },
     },
@@ -42,11 +41,45 @@ export default async function acceptEventRequest(inviteId: string) {
       updateOne: {
         filter: { _id: new ObjectId(invite.users.received) },
         update: {
-          $pull: { "eventsRequests.received": new ObjectId(inviteId) },
+          $pull: {
+            'eventsRequests.received': new ObjectId(inviteId),
+          },
         },
       },
     },
   ]);
 
-  await eventInvitesCollection.deleteOne({ _id: new ObjectId(inviteId) });
+  await eventInvitesCollection.deleteOne({
+    _id: new ObjectId(inviteId),
+  });
+
+  const event = await eventsCollection
+    .aggregate([
+      { $match: { _id: new ObjectId(invite.eventId) } },
+      {
+        $lookup: {
+          from: 'Users',
+          let: { signedUsers: '$signedUsers' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ['$_id', '$$signedUsers'],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                username: 1,
+              },
+            },
+          ],
+          as: 'signedUsers',
+        },
+      },
+    ])
+    .next();
+
+  return event;
 }

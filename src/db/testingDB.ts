@@ -24,249 +24,102 @@ const testing = async (body: any) => {
   const eventInvitesCollection =
     MongoCustomClient.collection.EventInvites();
   const eventsCollection = MongoCustomClient.collection.Events();
+  const testingCollection = MongoCustomClient.collection.Test();
 
   // const invite = await eventInvitesCollection.findOne({
   //   _id: new ObjectId(inviteId),
   // });
 
-  // User Projection
-  const userProjection = {
-    $project: {
-      _id: 1,
-      username: 1,
-    },
-  };
-
-  // Limit Option
-  const limitOption = { $limit: 5 };
-
-  // FriendsRequests Option
-  const friendsRequestsOptions = [
-    {
-      $lookup: {
-        from: 'Users',
-        let: { userID: '$_id' },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $in: ['$$userID', '$friendsRequests.received'],
-              },
-            },
-          },
-          limitOption,
-          userProjection,
-        ],
-        as: 'friendsRequests.sent',
-      },
-    },
-    {
-      $lookup: {
-        from: 'Users',
-        let: { userID: '$_id' },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $in: ['$$userID', '$friendsRequests.sent'],
-              },
-            },
-          },
-          limitOption,
-          userProjection,
-        ],
-        as: 'friendsRequests.received',
-      },
-    },
-  ];
-
-  // friends Option
-  const friendsOptions = {
-    $lookup: {
-      from: 'Users',
-      let: { userID: '$_id' },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $in: ['$$userID', '$friends'],
-            },
-          },
-        },
-        userProjection,
-        limitOption,
-      ],
-      as: 'friends',
-    },
-  };
-
-  //concat invites with events
-  const invites = {
-    $lookup: {
-      from: 'EventInvites',
-      let: { eventId: '$_eventId' },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $eq: ['$eventID', '$$eventId'],
-            },
-          },
-        },
-        {
-          $lookup: {
-            from: 'Users',
-            let: { userId: '$users.received' },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $eq: ['$_id', '$$userId'],
-                  },
-                },
-              },
-              userProjection,
-            ],
-            as: 'users.received',
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            user: {
-              $arrayElemAt: ['$users.received', 0],
-            },
-          },
-        },
-      ],
-      as: 'invites',
-    },
-  };
-
-  // userEvents Option
-  const userEventsOptions = {
-    $lookup: {
-      from: 'Events',
-      let: { userId: '$_id' },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $eq: ['$createdBy._id', '$$userId'],
-            },
-          },
-        },
-        { $limit: 5 },
-        {
-          $lookup: {
-            from: 'Users',
-            let: { signedUsers: '$signedUsers' },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $in: ['$_id', '$$signedUsers'],
-                  },
-                },
-              },
-              userProjection,
-            ],
-            as: 'signedUsers',
-          },
-        },
-        invites,
-      ],
-      as: 'events.userEvents',
-    },
-  };
-
-  // signedEvents Option
-  const signedEventsOptions = {
-    $lookup: {
-      from: 'Events',
-      let: { userID: '$_id' },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $and: [
-                { $in: ['$$userID', '$signedUsers'] },
-                { $not: { $eq: ['$$userID', '$createdBy._id'] } },
-              ],
-            },
-          },
-        },
-        limitOption,
-      ],
-      as: 'events.userSignedEvents',
-    },
-  };
-
-  // invitedEvents Option
-  const invitedEventsOptions = {
-    $lookup: {
-      from: 'EventInvites',
-      let: { userID: '$_id' },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $eq: ['$users.received', '$$userID'],
-            },
-          },
-        },
-        {
-          $lookup: {
-            from: 'Events',
-            localField: 'eventId',
-            foreignField: '_id',
-            as: 'event',
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            event: { $arrayElemAt: ['$event', 0] },
-            invitedBy: '$users.sent',
-          },
-        },
-        {
-          $set: {
-            'event.invitedBy': '$invitedBy',
-            'event.inviteId': '$_id',
-          },
-        },
-      ],
-      as: 'events.userInvitedEvents',
-    },
-  };
-
   // aggregate
-  const cursor = userCollection.aggregate([
-    { $match: { username: 'trzeci' } },
-    userEventsOptions,
-    signedEventsOptions,
-    invitedEventsOptions,
-    friendsOptions,
-    ...friendsRequestsOptions,
-    {
-      $project: {
-        _id: 0,
-        friends: 1,
-        friendsRequests: 1,
-        eventsRequests: 1,
-        events: {
-          userEvents: 1,
-          userSignedEvents: 1,
-          userInvitedEvents: '$events.userInvitedEvents.event',
+  // const cursor = eventsCollection.aggregate([
+  //   { $limit: 1 },
+  // { $match: { username: 'trzeci' } },
+  // userEventsOptions,
+  // signedEventsOptions,
+  // invitedEventsOptions,
+  // friendsOptions,
+  // ...friendsRequestsOptions,
+  // {
+  //   $project: {
+  //     _id: 0,
+  //     friends: 1,
+  //     friendsRequests: 1,
+  //     eventsRequests: 1,
+  //     events: {
+  //       userEvents: 1,
+  //       userSignedEvents: 1,
+  //       userInvitedEvents: '$events.userInvitedEvents.event',
+  //     },
+  //   },
+  // },
+  // ]);
+
+  // await testingCollection.insertOne({
+  //   town: 'Warsaw',
+  //   country: 'Poland',
+  //   population: '3000000',
+  //   street: 'Krakowska',
+  //   number: '1',
+  //   zip: '00-001',
+  //   coordinates: {
+  //     lat: '52.2323',
+  //     lng: '21.1232',
+  //   },
+  // });
+
+  // await testingCollection.insertOne({
+  //   town: 'Warsaw',
+  //   famousePlaces: [
+  //     {
+  //       name: 'Krakow',
+  //       population: '3000000',
+  //       coordinates: {
+  //         lat: '52.2323',
+  //         lng: '21.1232',
+  //       },
+  //     },
+  //     {
+  //       name: 'Warsaw',
+  //       population: '3000000',
+  //       coordinates: {
+  //         lat: '52.2323',
+  //         lng: '21.1232',
+  //       },
+  //     },
+  //   ],
+  // });
+
+  const event = await eventsCollection
+    .aggregate([
+      { $match: { _id: new ObjectId('61ed775939e0f3349e20519b') } },
+      {
+        $lookup: {
+          from: 'Users',
+          let: { signedUsers: '$signedUsers' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ['$_id', '$$signedUsers'],
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                username: 1,
+              },
+            },
+          ],
+          as: 'signedUsers',
         },
       },
-    },
-  ]);
+    ])
+    .next();
 
-  const invite = await cursor.next();
+  // const invite = await cursor.next();
 
-  return invite;
+  return event;
 };
 
 export default testing;
