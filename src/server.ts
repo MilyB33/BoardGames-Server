@@ -7,6 +7,7 @@ import logger from './middlewares/logger';
 import headers from './middlewares/headers';
 import errorHandler from './middlewares/errorHandler';
 
+import authRoutes from './routes/auth';
 import usersRoutes from './routes/users';
 import events from './routes/events';
 import testing from './routes/testing';
@@ -27,8 +28,9 @@ server.get('/', async (req, res: Response) => {
 });
 
 // Routes
-server.use(usersRoutes);
-server.use(events);
+server.use('/auth', authRoutes);
+server.use('/users', usersRoutes);
+server.use('/events', events);
 server.use(testing);
 
 server.use(errorHandler);

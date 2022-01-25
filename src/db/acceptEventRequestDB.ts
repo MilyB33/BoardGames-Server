@@ -20,7 +20,7 @@ export default async function acceptEventRequest(inviteId: string) {
 
   if (!invite) throw new BaseError('Invite not found', 404);
 
-  const updatedId = await eventsCollection.updateOne(
+  await eventsCollection.updateOne(
     { _id: new ObjectId(invite.eventId) },
     {
       $pull: { invites: new ObjectId(inviteId) },

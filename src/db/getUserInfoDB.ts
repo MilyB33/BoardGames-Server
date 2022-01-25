@@ -1,13 +1,11 @@
-import { ObjectId } from "mongodb";
-import DBClient from "../clients/mongoClient";
-import logging from "../config/logging";
+import { ObjectId } from 'mongodb';
+import DBClient from '../clients/mongoClient';
+import logging from '../config/logging';
 
-import { UserInfo } from "../models/models";
-
-const NAMESPACE = "getUserInfoDB";
+const NAMESPACE = 'getUserInfoDB';
 
 export default async function getUserInfo(userID: string) {
-  logging.info(NAMESPACE, "getUserInfo");
+  logging.info(NAMESPACE, 'getUserInfo');
 
   await DBClient.connect();
 
@@ -28,26 +26,36 @@ export default async function getUserInfo(userID: string) {
   const friendsRequestsOptions = [
     {
       $lookup: {
-        from: "Users",
-        let: { userID: "$_id" },
+        from: 'Users',
+        let: { userID: '$_id' },
         pipeline: [
-          { $match: { $expr: { $in: ["$$userID", "$friendsRequests.received"] } } },
+          {
+            $match: {
+              $expr: {
+                $in: ['$$userID', '$friendsRequests.received'],
+              },
+            },
+          },
           limitOption,
           userProjection,
         ],
-        as: "friendsRequests.sent",
+        as: 'friendsRequests.sent',
       },
     },
     {
       $lookup: {
-        from: "Users",
-        let: { userID: "$_id" },
+        from: 'Users',
+        let: { userID: '$_id' },
         pipeline: [
-          { $match: { $expr: { $in: ["$$userID", "$friendsRequests.sent"] } } },
+          {
+            $match: {
+              $expr: { $in: ['$$userID', '$friendsRequests.sent'] },
+            },
+          },
           limitOption,
           userProjection,
         ],
-        as: "friendsRequests.received",
+        as: 'friendsRequests.received',
       },
     },
   ];
@@ -55,117 +63,129 @@ export default async function getUserInfo(userID: string) {
   // friends Option
   const friendsOptions = {
     $lookup: {
-      from: "Users",
-      let: { userID: "$_id" },
+      from: 'Users',
+      let: { userID: '$_id' },
       pipeline: [
-        { $match: { $expr: { $in: ["$$userID", "$friends"] } } },
+        { $match: { $expr: { $in: ['$$userID', '$friends'] } } },
         userProjection,
         limitOption,
       ],
-      as: "friends",
+      as: 'friends',
     },
   };
 
   //concat invites with events
   const invites = {
     $lookup: {
-      from: "EventInvites",
-      let: { eventId: "$_eventId" },
+      from: 'EventInvites',
+      let: { eventId: '$_eventId' },
       pipeline: [
-        { $match: { $expr: { $eq: ["$eventID", "$$eventId"] } } },
+        { $match: { $expr: { $eq: ['$eventID', '$$eventId'] } } },
         {
           $lookup: {
-            from: "Users",
-            let: { userId: "$users.received" },
-            pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$userId"] } } }, userProjection],
-            as: "users.received",
+            from: 'Users',
+            let: { userId: '$users.received' },
+            pipeline: [
+              { $match: { $expr: { $eq: ['$_id', '$$userId'] } } },
+              userProjection,
+            ],
+            as: 'users.received',
           },
         },
         {
           $project: {
             _id: 1,
-            user: { $arrayElemAt: ["$users.received", 0] },
+            user: { $arrayElemAt: ['$users.received', 0] },
           },
         },
       ],
-      as: "invites",
+      as: 'invites',
     },
   };
 
   // userEvents Option
   const userEventsOptions = {
     $lookup: {
-      from: "Events",
-      let: { userId: "$_id" },
+      from: 'Events',
+      let: { userId: '$_id' },
       pipeline: [
-        { $match: { $expr: { $eq: ["$createdBy._id", "$$userId"] } } },
+        {
+          $match: { $expr: { $eq: ['$createdBy._id', '$$userId'] } },
+        },
         { $limit: 5 },
         {
           $lookup: {
-            from: "Users",
-            let: { signedUsers: "$signedUsers" },
-            pipeline: [{ $match: { $expr: { $in: ["$_id", "$$signedUsers"] } } }, userProjection],
-            as: "signedUsers",
+            from: 'Users',
+            let: { signedUsers: '$signedUsers' },
+            pipeline: [
+              {
+                $match: { $expr: { $in: ['$_id', '$$signedUsers'] } },
+              },
+              userProjection,
+            ],
+            as: 'signedUsers',
           },
         },
         invites,
       ],
-      as: "events.userEvents",
+      as: 'events.userEvents',
     },
   };
 
   // signedEvents Option
   const signedEventsOptions = {
     $lookup: {
-      from: "Events",
-      let: { userID: "$_id" },
+      from: 'Events',
+      let: { userID: '$_id' },
       pipeline: [
         {
           $match: {
             $expr: {
               $and: [
-                { $in: ["$$userID", "$signedUsers"] },
-                { $not: { $eq: ["$$userID", "$createdBy._id"] } },
+                { $in: ['$$userID', '$signedUsers'] },
+                { $not: { $eq: ['$$userID', '$createdBy._id'] } },
               ],
             },
           },
         },
         limitOption,
       ],
-      as: "events.userSignedEvents",
+      as: 'events.userSignedEvents',
     },
   };
 
   // userInvitedEvents Option
   const userInvitedEventsOptions = {
     $lookup: {
-      from: "EventInvites",
-      let: { userID: "$_id" },
+      from: 'EventInvites',
+      let: { userID: '$_id' },
       pipeline: [
-        { $match: { $expr: { $eq: ["$users.received", "$$userID"] } } },
+        {
+          $match: { $expr: { $eq: ['$users.received', '$$userID'] } },
+        },
         {
           $lookup: {
-            from: "Events",
-            localField: "eventId",
-            foreignField: "_id",
-            as: "event",
+            from: 'Events',
+            localField: 'eventId',
+            foreignField: '_id',
+            as: 'event',
           },
         },
         {
           $project: {
             _id: 1,
-            event: { $arrayElemAt: ["$event", 0] },
-            invitedBy: "$users.sent",
+            event: { $arrayElemAt: ['$event', 0] },
+            invitedBy: '$users.sent',
           },
         },
         {
           $set: {
-            "event.invitedBy": "$invitedBy",
-            "event.inviteId": "$_id",
+            'event.invitedBy': '$invitedBy',
+            'event.inviteId': '$_id',
           },
         },
       ],
-      as: "events.userInvitedEvents",
+      as: 'events.userInvitedEvents',
     },
   };
 
@@ -186,7 +206,7 @@ export default async function getUserInfo(userID: string) {
         events: {
           userEvents: 1,
           userSignedEvents: 1,
-          userInvitedEvents: "$events.userInvitedEvents.event",
+          userInvitedEvents: '$events.userInvitedEvents.event',
         },
       },
     },

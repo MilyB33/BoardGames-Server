@@ -22,29 +22,6 @@ const getUsers = async (req: Request, res: Response) =>
     res.status(200).send({ message: 'Users retrieved', result });
   });
 
-const login = async (req: Request, res: Response) =>
-  errorHelper(
-    req,
-    res,
-    'Something went wrong during logging in',
-    async () => {
-      const result = await loginDB(req.body);
-
-      res.status(200).send({ message: 'User logged in', result });
-    }
-  );
-
-const register = async (req: Request, res: Response) =>
-  errorHelper(
-    req,
-    res,
-    'Something went wrong during registration',
-    async () => {
-      await registerDB(req.body);
-
-      res.status(200).send({ message: 'User created', result: null });
-    }
-  );
 const getUserInfo = async (req: Request, res: Response) =>
   errorHelper(
     req,
@@ -187,8 +164,6 @@ const acceptEventRequest = async (req: Request, res: Response) =>
 
 export default {
   getUsers,
-  login,
-  register,
   getUserInfo,
   deleteUser,
   updatePassword,
