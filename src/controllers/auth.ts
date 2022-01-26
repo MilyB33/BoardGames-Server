@@ -8,7 +8,7 @@ const login = async (req: Request, res: Response) =>
   errorHelper(
     req,
     res,
-    'Something went wrong during logging in',
+    'Something went wrong while logging in',
     async () => {
       const result = await loginDB(req.body);
 
@@ -20,7 +20,7 @@ const register = async (req: Request, res: Response) =>
   errorHelper(
     req,
     res,
-    'Something went wrong during registration',
+    'Something went wrong while registration',
     async () => {
       await registerDB(req.body);
 

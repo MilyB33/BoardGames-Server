@@ -13,37 +13,52 @@ import deleteUserEventDB from '../db/deleteUserEventDB';
 import errorHelper from '../utils/errorHelper';
 
 const getEventsAll = async (req: Request, res: Response) =>
-  errorHelper(req, res, 'Something went wrong', async () => {
-    const result = await getEventsAllDB(req.query);
+  errorHelper(
+    req,
+    res,
+    'Something went wrong while getting events',
+    async () => {
+      const result = await getEventsAllDB(req.query);
 
-    res.status(200).send({ message: 'Success', result });
-  });
+      res.status(200).send({ message: 'Success', result });
+    }
+  );
 
 const getUserEventsAll = async (req: Request, res: Response) =>
-  errorHelper(req, res, 'Something went wrong', async () => {
-    const result = await getEventsUserAllDB(
-      req.params.userID,
-      req.query
-    );
+  errorHelper(
+    req,
+    res,
+    'Something went wrong while getting events',
+    async () => {
+      const result = await getEventsUserAllDB(
+        req.params.userID,
+        req.query
+      );
 
-    res.status(200).send({ message: 'Success', result });
-  });
+      res.status(200).send({ message: 'Success', result });
+    }
+  );
 
 const getUserEvent = async (req: Request, res: Response) =>
-  errorHelper(req, res, 'Something went wrong', async () => {
-    const result = await getUserEventDB(
-      req.params.userID,
-      req.params.eventID
-    );
+  errorHelper(
+    req,
+    res,
+    'Something went wrong while getting events',
+    async () => {
+      const result = await getUserEventDB(
+        req.params.userID,
+        req.params.eventID
+      );
 
-    res.status(200).send({ message: 'Success', result });
-  });
+      res.status(200).send({ message: 'Success', result });
+    }
+  );
 
 const add = async (req: Request, res: Response) =>
   errorHelper(
     req,
     res,
-    'Something went wrong during added',
+    'Something went wrong while adding event',
     async () => {
       const result = await addEventDB(
         req.params.userID,
@@ -58,7 +73,7 @@ const deleteEvent = async (req: Request, res: Response) =>
   errorHelper(
     req,
     res,
-    'Something went wrong during deleting',
+    'Something went wrong while deleting event',
     async () => {
       const result = await deleteEventDB(
         req.params.userID,
@@ -70,55 +85,80 @@ const deleteEvent = async (req: Request, res: Response) =>
   );
 
 const updateEvent = async (req: Request, res: Response) =>
-  errorHelper(req, res, 'Something went wrong', async () => {
-    const result = await updateEventDB(
-      req.params.userID,
-      req.params.eventID,
-      req.body.event
-    );
+  errorHelper(
+    req,
+    res,
+    'Something went wrong while updating event',
+    async () => {
+      const result = await updateEventDB(
+        req.params.userID,
+        req.params.eventID,
+        req.body.event
+      );
 
-    res.status(200).send({ message: 'Success', result });
-  });
+      res.status(200).send({ message: 'Success', result });
+    }
+  );
 
 const signUpEvent = async (req: Request, res: Response) =>
-  errorHelper(req, res, 'Something went wrong', async () => {
-    const result = await signUserForEvent(
-      req.params.userID,
-      req.params.eventID
-    );
+  errorHelper(
+    req,
+    res,
+    'Something went wrong while signing up for event',
+    async () => {
+      const result = await signUserForEvent(
+        req.params.userID,
+        req.params.eventID
+      );
 
-    res.status(200).send({ message: 'Success', result });
-  });
+      res.status(200).send({ message: 'Success', result });
+    }
+  );
 
 const signOutEvent = async (req: Request, res: Response) =>
-  errorHelper(req, res, 'Something went wrong', async () => {
-    const result = await signOutUserforEvent(
-      req.params.userID,
-      req.params.eventID
-    );
+  errorHelper(
+    req,
+    res,
+    'Something went wrong while signing out from event',
+    async () => {
+      const result = await signOutUserforEvent(
+        req.params.userID,
+        req.params.eventID
+      );
 
-    res.status(200).send({ message: 'Success', result });
-  });
+      res.status(200).send({ message: 'Success', result });
+    }
+  );
 
 const getUserSignedEvents = async (req: Request, res: Response) =>
-  errorHelper(req, res, 'Something went wrong', async () => {
-    const result = await getUserSignedEventsDB(
-      req.params.userID,
-      req.query
-    );
+  errorHelper(
+    req,
+    res,
+    'Something went wrong while getting events',
+    async () => {
+      const result = await getUserSignedEventsDB(
+        req.params.userID,
+        req.query
+      );
 
-    res.status(200).send({ message: 'Success', result });
-  });
+      res.status(200).send({ message: 'Success', result });
+    }
+  );
 
 const deleteUserEvent = async (req: Request, res: Response) =>
-  errorHelper(req, res, 'Something went wrong', async () => {
-    const result = await deleteUserEventDB(
-      req.params.userID,
-      req.params.eventID
-    );
+  errorHelper(
+    req,
+    res,
+    'Something went wrong while deleting user events',
+    async () => {
+      const result = await deleteUserEventDB(
+        req.params.userID,
+        req.params.eventID
+      );
 
-    res.status(200).send({ message: 'Success', result });
-  });
+      res.status(200).send({ message: 'Success', result });
+    }
+  );
 
 export default {
   add,

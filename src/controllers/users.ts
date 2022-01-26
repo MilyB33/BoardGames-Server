@@ -16,17 +16,22 @@ import getUserInfoDB from '../db/getUserInfoDB';
 import errorHelper from '../utils/errorHelper';
 
 const getUsers = async (req: Request, res: Response) =>
-  errorHelper(req, res, 'Error getting users', async () => {
-    const result = await getUsersDB(req.query);
+  errorHelper(
+    req,
+    res,
+    'Something went wrong while getting users',
+    async () => {
+      const result = await getUsersDB(req.query);
 
-    res.status(200).send({ message: 'Users retrieved', result });
-  });
+      res.status(200).send({ message: 'Users retrieved', result });
+    }
+  );
 
 const getUserInfo = async (req: Request, res: Response) =>
   errorHelper(
     req,
     res,
-    'Something went wrong during getting user info',
+    'Something went wrong while getting user info',
     async () => {
       const result = await getUserInfoDB(req.params.userID);
 
@@ -40,7 +45,7 @@ const deleteUser = async (req: Request, res: Response) =>
   errorHelper(
     req,
     res,
-    'Something went wrong during deleting',
+    'Something went wrong while deleting',
     async () => {
       await deleteUserDB(req.params.userID);
 
@@ -52,7 +57,7 @@ const updatePassword = async (req: Request, res: Response) =>
   errorHelper(
     req,
     res,
-    'Something went wrong during updating',
+    'Something went wrong while updating password',
     async () => {
       await updatePasswordDB(req.params.userID, req.body);
 
@@ -64,7 +69,7 @@ const sendFriendsRequest = async (req: Request, res: Response) =>
   errorHelper(
     req,
     res,
-    'Something went wrong during sending request',
+    'Something went wrong while sending friend request',
     async () => {
       const result = await friendsRequestDB(
         req.params.userID,
@@ -79,7 +84,7 @@ const acceptFriendsRequest = async (req: Request, res: Response) =>
   errorHelper(
     req,
     res,
-    'Something went wrong during accepting request',
+    'Something went wrong while accepting friend request',
     async () => {
       const result = await acceptFriendsRequestDB(
         req.params.userID,
@@ -94,7 +99,7 @@ const rejectFriendsRequest = async (req: Request, res: Response) =>
   errorHelper(
     req,
     res,
-    'Something went wrong during rejecting request',
+    'Something went wrong while rejecting friend request',
     async () => {
       await rejectFriendsRequestDB(
         req.params.userID,
@@ -111,7 +116,7 @@ const deleteFriend = async (req: Request, res: Response) =>
   errorHelper(
     req,
     res,
-    'Something went wrong during deleting friend',
+    'Something went wrong while deleting friend',
     async () => {
       await deleteFriendDB(req.params.userID, req.params.friendID);
 
@@ -125,7 +130,7 @@ const eventsRequests = async (req: Request, res: Response) =>
   errorHelper(
     req,
     res,
-    'Something went wrong during sending request',
+    'Something went wrong while sending event request',
     async () => {
       const result = await eventRequestDB(
         req.params.userID,
@@ -140,7 +145,7 @@ const rejectEventRequest = async (req: Request, res: Response) =>
   errorHelper(
     req,
     res,
-    'Something went wrong during rejecting request',
+    'Something went wrong while rejecting event request',
     async () => {
       await rejectEventRequestDB(req.params.inviteId);
 
@@ -154,7 +159,7 @@ const acceptEventRequest = async (req: Request, res: Response) =>
   errorHelper(
     req,
     res,
-    'Something went wrong during accepting request',
+    'Something went wrong while accepting event request',
     async () => {
       const result = await acceptEventRequestDB(req.params.inviteId);
 
