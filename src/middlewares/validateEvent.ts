@@ -19,6 +19,7 @@ function validateEvent(
     description,
     town,
     maxPlayers,
+    isPrivate,
   } = req.body.event;
 
   if (
@@ -28,7 +29,8 @@ function validateEvent(
     !time ||
     !game ||
     !town ||
-    !maxPlayers
+    !maxPlayers ||
+    isPrivate === undefined
   ) {
     return res.status(400).json({
       message: 'Missing event information',

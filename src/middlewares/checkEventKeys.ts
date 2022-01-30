@@ -23,6 +23,7 @@ const checkEventKeys = (
     'game',
     'town',
     'maxPlayers',
+    'isPrivate',
   ];
 
   for (let key in req.body.event) {

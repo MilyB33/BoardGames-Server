@@ -18,6 +18,7 @@ export default async function getEventsAllDB(
 
   const events = await eventsCollection
     .aggregate<FullEvent>([
+      { $match: { isPrivate: false } },
       { $skip: offset ? parseInt(offset) : 0 },
       { $limit: limit ? parseInt(limit) : 0 },
       {

@@ -133,6 +133,7 @@ export type Event = Required<EventOptionally> & {
   location: string;
   town: string;
   maxPlayers: number;
+  isPrivate: boolean;
 };
 
 // ========================================================

@@ -11,7 +11,7 @@ import { UserEntry, User, FullEvent } from '../models/models';
 const testing = async (body: any) => {
   logging.info(NAMESPACE, 'Hello World');
 
-  const userID = new ObjectId('61e01ea02395c98cfd3cff0b');
+  const userID = new ObjectId('61f6cfc922d94b991689aef5');
   const friendID = new ObjectId('61e01f1f2395c98cfd3cff0c');
   const inviteId = new ObjectId('61eab344ccc442d640c17fe4');
 
@@ -26,100 +26,53 @@ const testing = async (body: any) => {
   const eventsCollection = MongoCustomClient.collection.Events();
   const testingCollection = MongoCustomClient.collection.Test();
 
-  // const invite = await eventInvitesCollection.findOne({
-  //   _id: new ObjectId(inviteId),
-  // });
-
-  // aggregate
-  // const cursor = eventsCollection.aggregate([
-  //   { $limit: 1 },
-  // { $match: { username: 'trzeci' } },
-  // userEventsOptions,
-  // signedEventsOptions,
-  // invitedEventsOptions,
-  // friendsOptions,
-  // ...friendsRequestsOptions,
-  // {
-  //   $project: {
-  //     _id: 0,
-  //     friends: 1,
-  //     friendsRequests: 1,
-  //     eventsRequests: 1,
-  //     events: {
-  //       userEvents: 1,
-  //       userSignedEvents: 1,
-  //       userInvitedEvents: '$events.userInvitedEvents.event',
-  //     },
-  //   },
-  // },
-  // ]);
-
-  // await testingCollection.insertOne({
-  //   town: 'Warsaw',
-  //   country: 'Poland',
-  //   population: '3000000',
-  //   street: 'Krakowska',
-  //   number: '1',
-  //   zip: '00-001',
-  //   coordinates: {
-  //     lat: '52.2323',
-  //     lng: '21.1232',
-  //   },
-  // });
-
-  // await testingCollection.insertOne({
-  //   town: 'Warsaw',
-  //   famousePlaces: [
+  // const eventRequests = await userCollection
+  //   .aggregate([
   //     {
-  //       name: 'Krakow',
-  //       population: '3000000',
-  //       coordinates: {
-  //         lat: '52.2323',
-  //         lng: '21.1232',
+  //       $match: {
+  //         _id: userID,
   //       },
   //     },
   //     {
-  //       name: 'Warsaw',
-  //       population: '3000000',
-  //       coordinates: {
-  //         lat: '52.2323',
-  //         lng: '21.1232',
+  //       $project: {
+  //         _id: 0,
+  //         eventRequests: {
+  //           $concatArrays: [
+  //             '$eventsRequests.sent',
+  //             '$eventsRequests.received',
+  //           ],
+  //         },
   //       },
   //     },
-  //   ],
-  // });
+  //   ])
+  //   .next();
 
-  const event = await eventsCollection
+  const users = await userCollection
     .aggregate([
-      { $match: { _id: new ObjectId('61ed775939e0f3349e20519b') } },
       {
-        $lookup: {
-          from: 'Users',
-          let: { signedUsers: '$signedUsers' },
-          pipeline: [
+        $match: {
+          $or: [
             {
-              $match: {
-                $expr: {
-                  $in: ['$_id', '$$signedUsers'],
-                },
+              'eventsRequests.sent': {
+                $in: [new ObjectId('61f700b8a5ad47ffd9c8ca0a')],
               },
             },
             {
-              $project: {
-                _id: 1,
-                username: 1,
+              'eventsRequests.received': {
+                $in: [new ObjectId('61f700b8a5ad47ffd9c8ca0a')],
               },
             },
           ],
-          as: 'signedUsers',
         },
       },
     ])
-    .next();
+    .toArray();
+
+  console.log(users);
 
   // const invite = await cursor.next();
 
-  return event;
+  return users;
 };
 
 export default testing;

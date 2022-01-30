@@ -34,18 +34,12 @@ export default async function rejectFriendsRequest(
       $project: {
         _id: 1,
         username: 1,
-        'friends.received': {
+        friends: 1,
+        friendsRequests: {
           $cond: {
-            if: { $eq: new ObjectId(userID) },
-            then: '$friends.sent',
-            else: '$$Remove',
-          },
-        },
-        'friends.sent': {
-          $cond: {
-            if: { $eq: new ObjectId(friendID) },
-            then: '$friends.received',
-            else: '$$Remove',
+            if: { _id: new ObjectId(userID) },
+            then: '$friendsRequests',
+            else: '$$REMOVE',
           },
         },
       },
@@ -57,9 +51,10 @@ export default async function rejectFriendsRequest(
     usersIDs
   );
 
-  if (!users[0]) throw new BaseError('User not found');
+  if (!users[0]) throw new BaseError('User not found', 404);
 
-  if (!users[1]) throw new BaseError('Requested User not found');
+  if (!users[1])
+    throw new BaseError('Requesting User not found', 404);
 
   const {
     friends,
@@ -67,10 +62,10 @@ export default async function rejectFriendsRequest(
   } = users[0];
 
   if (friends.map(mapUserEntries).includes(users[1]._id.toString()))
-    throw new BaseError('User already in friends list');
+    throw new BaseError('User already in friends list', 404);
 
-  if (received.map(mapUserEntries).includes(users[1]._id.toString()))
-    throw new BaseError('User is not requesting to be friends');
+  if (!received.map(mapUserEntries).includes(users[1]._id.toString()))
+    throw new BaseError('User is not requesting to be friends', 404);
 
   await userCollection.bulkWrite([
     {
