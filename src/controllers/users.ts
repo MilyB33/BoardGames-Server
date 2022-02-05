@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
 
-import loginDB from '../db/loginDB';
-import registerDB from '../db/registerDB';
 import deleteUserDB from '../db/deleteUserDB';
 import updatePasswordDB from '../db/updatePasswordDB';
 import getUsersDB from '../db/getUsersDB';

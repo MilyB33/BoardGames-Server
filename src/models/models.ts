@@ -12,28 +12,17 @@ export type UserCollection = Omit<User, 'token'> & {
 
 export type EventsCollection = FullEvent;
 
-export type FriendsCollection = {
-  _id: ObjectId | string;
-  userId: ObjectId;
-  friends: UserEntry[];
-  requests: {
-    sent: UserEntry[];
-    received: UserEntry[];
-  };
-};
-
 export type CollectionsNames =
   | 'Users'
   | 'Events'
   | 'Test'
-  | 'Friends'
   | 'EventInvites';
 
 export type CollectionsTypes = {
   Users: UserCollection;
   Events: EventsCollection;
   Test: any;
-  EventInvites: any;
+  EventInvites: EventInvitesCollection;
 };
 
 export type CollectionsLiteral = {
@@ -112,6 +101,14 @@ export type LoginData = UserEntry & {
 // ========================================================
 
 // Events
+
+export type EventResult = Event & {
+  _id?: string;
+  createdBy: UserEntry;
+  createdAt: string;
+  signedUsers: UserEntry[];
+  invites: UserEntry[] | ID[];
+};
 
 export type FullEvent = Event & {
   _id?: ObjectId; // Probably this should be required

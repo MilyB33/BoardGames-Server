@@ -1,6 +1,7 @@
 import { ObjectId } from 'mongodb';
 import DBClient from '../clients/mongoClient';
 import BaseError from '../utils/Error';
+import mongoQueries from '../models/mongoAggregateQueries';
 
 import logging from '../config/logging';
 
@@ -17,39 +18,33 @@ export default async function signUserForEvent(
   await DBClient.connect();
 
   const eventsCollection = DBClient.collection.Events();
-  const usersCollection = DBClient.collection.Users();
 
-  const user = await usersCollection.findOne(
-    { _id: new ObjectId(userID) },
-    { projection: { _id: 1 } }
+  const event = await eventsCollection.findOneAndUpdate(
+    { _id: new ObjectId(eventID) },
+    { $push: { signedUsers: new ObjectId(userID) } },
+    { returnDocument: 'before' }
   );
 
-  if (!user) throw new BaseError('User not found', 404);
+  if (!event.value) throw new BaseError('Event not found', 404);
 
-  const event = await eventsCollection.findOne({
-    _id: new ObjectId(eventID),
-  });
-
-  if (!event) throw new BaseError('Event not found', 404);
-
-  if (event.createdBy._id === userID)
+  if (event.value.createdBy._id === userID)
     throw new BaseError(
       'You can not sign up for your own event',
       400
     );
 
-  if (event.signedUsers.includes(user._id)) {
+  if (event.value.signedUsers.includes(userID)) {
     throw new BaseError('User already signed for this event', 400);
   }
 
-  const updatedEvent = await eventsCollection.findOneAndUpdate(
-    { _id: new ObjectId(eventID) },
-    { $push: { signedUsers: new ObjectId(user._id) } },
-    { returnDocument: 'after' }
-  );
+  const updatedEvent = await eventsCollection
+    .aggregate<FullEvent>([
+      { $match: { _id: new ObjectId(eventID) } },
+      mongoQueries.eventQuery.signedUsers,
+    ])
+    .next();
 
-  if (!updatedEvent.value)
-    throw new BaseError('Event not found', 404);
+  console.log(updatedEvent);
 
-  return updatedEvent.value;
+  return updatedEvent!;
 }

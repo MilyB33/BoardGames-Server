@@ -17,12 +17,6 @@ router.get(
 );
 
 router.get(
-  '/:userID/:eventID',
-  authenticate,
-  eventsControllers.getUserEvent
-);
-
-router.get(
   '/:userID/signed/all',
   authenticate,
   eventsControllers.getUserSignedEvents
@@ -56,12 +50,6 @@ router.post(
   '/:userID/:eventID/signOut',
   [authenticate],
   eventsControllers.signOutEvent
-);
-
-router.delete(
-  '/:userID/:eventID',
-  [authenticate],
-  eventsControllers.deleteUserEvent
 );
 
 export = router;

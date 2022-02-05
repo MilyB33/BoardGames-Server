@@ -1,9 +1,10 @@
-import { ObjectId, ReturnDocument } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import DBClient from '../clients/mongoClient';
+import mongQueries from '../models/mongoAggregateQueries';
 
 import logging from '../config/logging';
 import BaseError from '../utils/Error';
-import { Event, EventsCollection, FullEvent } from '../models/models';
+import { Event, FullEvent } from '../models/models';
 
 const NAMESPACE = 'addEventDB';
 
@@ -37,71 +38,11 @@ export default async function add(
     .insertOne(newEvent)
     .then((result) => result.insertedId);
 
-  // User Projection
-  const userProjection = {
-    $project: {
-      _id: 1,
-      username: 1,
-    },
-  };
-
-  //concat invites with events
-  const invites = {
-    $lookup: {
-      from: 'EventInvites',
-      let: { eventId: '$_eventId' },
-      pipeline: [
-        { $match: { $expr: { $eq: ['$eventID', '$$eventId'] } } },
-        {
-          $lookup: {
-            from: 'Users',
-            let: { userId: '$users.received' },
-            pipeline: [
-              { $match: { $expr: { $eq: ['$_id', '$$userId'] } } },
-              userProjection,
-            ],
-            as: 'users.received',
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            user: { $arrayElemAt: ['$users.received', 0] },
-          },
-        },
-      ],
-      as: 'invites',
-    },
-  };
-
-  const userEventsOptions = {
-    $lookup: {
-      from: 'Users',
-      let: { signedUsers: '$signedUsers' },
-      pipeline: [
-        {
-          $match: {
-            $expr: {
-              $in: ['$_id', '$$signedUsers'],
-            },
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            username: 1,
-          },
-        },
-      ],
-      as: 'signedUsers',
-    },
-  };
-
   const returnedEvent = await eventsCollection
     .aggregate<FullEvent>([
       { $match: { _id: new ObjectId(_id) } },
-      userEventsOptions,
-      invites,
+      mongQueries.eventQuery.signedUsers,
+      mongQueries.eventQuery.invites,
     ])
     .next();
 

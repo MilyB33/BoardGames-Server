@@ -3,13 +3,11 @@ import { Request, Response } from 'express';
 import addEventDB from '../db/addEventDB';
 import getEventsAllDB from '../db/getEventsAllDB';
 import getEventsUserAllDB from '../db/getEventsUserAllDB';
-import getUserEventDB from '../db/getUserEventDB';
 import deleteEventDB from '../db/deleteEventDB';
 import updateEventDB from '../db/updateEventDB';
 import signUserForEvent from '../db/signUserForEvent';
 import signOutUserforEvent from '../db/signOutUserForEvent';
 import getUserSignedEventsDB from '../db/getUserSignedEventsDB';
-import deleteUserEventDB from '../db/deleteUserEventDB';
 import errorHelper from '../utils/errorHelper';
 
 const getEventsAll = async (req: Request, res: Response) =>
@@ -33,21 +31,6 @@ const getUserEventsAll = async (req: Request, res: Response) =>
       const result = await getEventsUserAllDB(
         req.params.userID,
         req.query
-      );
-
-      res.status(200).send({ message: 'Success', result });
-    }
-  );
-
-const getUserEvent = async (req: Request, res: Response) =>
-  errorHelper(
-    req,
-    res,
-    'Something went wrong while getting events',
-    async () => {
-      const result = await getUserEventDB(
-        req.params.userID,
-        req.params.eventID
       );
 
       res.status(200).send({ message: 'Success', result });
@@ -145,30 +128,13 @@ const getUserSignedEvents = async (req: Request, res: Response) =>
     }
   );
 
-const deleteUserEvent = async (req: Request, res: Response) =>
-  errorHelper(
-    req,
-    res,
-    'Something went wrong while deleting user events',
-    async () => {
-      const result = await deleteUserEventDB(
-        req.params.userID,
-        req.params.eventID
-      );
-
-      res.status(200).send({ message: 'Success', result });
-    }
-  );
-
 export default {
   add,
   getEventsAll,
   getUserEventsAll,
-  getUserEvent,
   deleteEvent,
   updateEvent,
   signUpEvent,
   signOutEvent,
   getUserSignedEvents,
-  deleteUserEvent,
 };

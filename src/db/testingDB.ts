@@ -1,6 +1,7 @@
 import { ObjectId } from 'mongodb';
 import MongoCustomClient from '../clients/mongoClient';
 import logging from '../config/logging';
+import mongoQueries from '../models/mongoAggregateQueries';
 
 const NAMESPACE = 'testingDB';
 
@@ -47,32 +48,47 @@ const testing = async (body: any) => {
   //   ])
   //   .next();
 
-  const users = await userCollection
+  // const invitesInfo = await eventsCollection
+  //   .aggregate([
+  //     { $match: { _id: new ObjectId('61fa3ccf3f958c0f29a17fa2') } },
+  //     mongoAggregateQueries.eventQuery.signedUsers,
+  //     mongoAggregateQueries.eventQuery.invitesWithoutInfo,
+  //   ])
+  //   .next();
+
+  // const invitesInfo2 = await eventInvitesCollection
+  //   .find({
+  //     eventId: new ObjectId('61f9223ef16e72fc68e586cf'),
+  //   })
+  //   .toArray();
+
+  const user = await userCollection
     .aggregate([
       {
-        $match: {
-          $or: [
-            {
-              'eventsRequests.sent': {
-                $in: [new ObjectId('61f700b8a5ad47ffd9c8ca0a')],
-              },
-            },
-            {
-              'eventsRequests.received': {
-                $in: [new ObjectId('61f700b8a5ad47ffd9c8ca0a')],
-              },
-            },
-          ],
+        $match: { username: 'Admin3' },
+      },
+      mongoQueries.eventQuery.userEvents,
+      mongoQueries.eventQuery.signedEvents,
+      mongoQueries.eventQuery.userInvitedEvents,
+      mongoQueries.userQuery.friends,
+      ...mongoQueries.userQuery.friendsRequest,
+      {
+        $project: {
+          _id: 0,
+          friends: 1,
+          friendsRequests: 1,
+          eventsRequests: 1,
+          events: {
+            userEvents: 1,
+            userSignedEvents: 1,
+            userInvitedEvents: '$events.userInvitedEvents.event',
+          },
         },
       },
     ])
-    .toArray();
+    .next();
 
-  console.log(users);
-
-  // const invite = await cursor.next();
-
-  return users;
+  return user;
 };
 
 export default testing;

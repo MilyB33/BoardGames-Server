@@ -1,16 +1,23 @@
-import { ObjectId } from "mongodb";
-import DBClient from "../clients/mongoClient";
-import logging from "../config/logging";
-import BaseError from "../utils/Error";
+import { ObjectId } from 'mongodb';
+import DBClient from '../clients/mongoClient';
+import logging from '../config/logging';
+import BaseError from '../utils/Error';
+import mongoQueries from '../models/mongoAggregateQueries';
 
-import { mapUserEntries, sortUsersInOrder } from "../utils/helperFunctions";
+import {
+  mapUserEntries,
+  sortUsersInOrder,
+} from '../utils/helperFunctions';
 
-import { User } from "../models/models";
+import { User } from '../models/models';
 
-const NAMESPACE = "deleteFriendDB";
+const NAMESPACE = 'deleteFriendDB';
 
-export default async function deleteFriend(userID: string, friendID: string) {
-  logging.debug(NAMESPACE, "deleteFriend");
+export default async function deleteFriend(
+  userID: string,
+  friendID: string
+) {
+  logging.debug(NAMESPACE, 'deleteFriend');
 
   await DBClient.connect();
 
@@ -24,34 +31,22 @@ export default async function deleteFriend(userID: string, friendID: string) {
         _id: { $in: userIDs },
       },
     },
-    {
-      $project: {
-        _id: 1,
-        username: 1,
-        friends: {
-          $cond: {
-            if: { $eq: ["$_id", new ObjectId(userID)] },
-            then: "$friends",
-            else: "$$REMOVE",
-          },
-        },
-        friendsRequests: {
-          $cond: {
-            if: { $eq: ["$_id", new ObjectId(userID)] },
-            then: "$friendsRequests",
-            else: "$$REMOVE",
-          },
-        },
-      },
-    },
+    mongoQueries.userQuery.userEntryWithFriends(userID),
   ]);
 
-  const users = sortUsersInOrder<User>(await cursor.toArray(), userIDs);
+  const users = sortUsersInOrder<User>(
+    await cursor.toArray(),
+    userIDs
+  );
 
-  if (!users[0] || !users[1]) throw new BaseError("User not found");
+  if (!users[0] || !users[1]) throw new BaseError('User not found');
 
-  if (!users[0].friends.map(mapUserEntries).includes(users[1]._id.toString()))
-    throw new BaseError("User not in friends list");
+  if (
+    !users[0].friends
+      .map(mapUserEntries)
+      .includes(users[1]._id.toString())
+  )
+    throw new BaseError('User not in friends list');
 
   await userCollection.bulkWrite([
     {

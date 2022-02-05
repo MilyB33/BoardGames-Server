@@ -1,6 +1,8 @@
 import { ObjectId } from 'mongodb';
 import DBClient from '../clients/mongoClient';
 import BaseError from '../utils/Error';
+import mongoQueries from '../models/mongoAggregateQueries';
+
 import logging from '../config/logging';
 
 const NAMESPACE = 'acceptEventRequestDB';
@@ -56,28 +58,7 @@ export default async function acceptEventRequest(inviteId: string) {
   const event = await eventsCollection
     .aggregate([
       { $match: { _id: new ObjectId(invite.eventId) } },
-      {
-        $lookup: {
-          from: 'Users',
-          let: { signedUsers: '$signedUsers' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $in: ['$_id', '$$signedUsers'],
-                },
-              },
-            },
-            {
-              $project: {
-                _id: 1,
-                username: 1,
-              },
-            },
-          ],
-          as: 'signedUsers',
-        },
-      },
+      mongoQueries.eventQuery.signedUsers,
     ])
     .next();
 
