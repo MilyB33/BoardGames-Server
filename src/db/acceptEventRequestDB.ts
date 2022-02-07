@@ -3,11 +3,15 @@ import DBClient from '../clients/mongoClient';
 import BaseError from '../utils/Error';
 import mongoQueries from '../models/mongoAggregateQueries';
 
+import { EventResult } from '../models/models';
+
 import logging from '../config/logging';
 
 const NAMESPACE = 'acceptEventRequestDB';
 
-export default async function acceptEventRequest(inviteId: string) {
+export default async function acceptEventRequest(
+  inviteId: string
+): Promise<EventResult> {
   logging.info(NAMESPACE, 'acceptEventRequest');
 
   await DBClient.connect();
@@ -16,35 +20,37 @@ export default async function acceptEventRequest(inviteId: string) {
   const eventInvitesCollection = DBClient.collection.EventInvites();
   const eventsCollection = DBClient.collection.Events();
 
+  const inviteIdObject = new ObjectId(inviteId);
+
   const invite = await eventInvitesCollection.findOne({
-    _id: new ObjectId(inviteId),
+    _id: inviteIdObject,
   });
 
   if (!invite) throw new BaseError('Invite not found', 404);
 
   await eventsCollection.updateOne(
-    { _id: new ObjectId(invite.eventId) },
+    { _id: invite.eventId },
     {
-      $pull: { invites: new ObjectId(inviteId) },
-      $push: { signedUsers: new ObjectId(invite.users.received) },
+      $pull: { invites: inviteIdObject },
+      $push: { signedUsers: invite.users.received },
     }
   );
 
   await userCollection.bulkWrite([
     {
       updateOne: {
-        filter: { _id: new ObjectId(invite.users.sent) },
+        filter: { _id: invite.users.sent },
         update: {
-          $pull: { 'eventsRequests.sent': new ObjectId(inviteId) },
+          $pull: { 'eventsRequests.sent': inviteIdObject },
         },
       },
     },
     {
       updateOne: {
-        filter: { _id: new ObjectId(invite.users.received) },
+        filter: { _id: invite.users.received },
         update: {
           $pull: {
-            'eventsRequests.received': new ObjectId(inviteId),
+            'eventsRequests.received': inviteIdObject,
           },
         },
       },
@@ -52,15 +58,18 @@ export default async function acceptEventRequest(inviteId: string) {
   ]);
 
   await eventInvitesCollection.deleteOne({
-    _id: new ObjectId(inviteId),
+    _id: inviteIdObject,
   });
 
   const event = await eventsCollection
-    .aggregate([
-      { $match: { _id: new ObjectId(invite.eventId) } },
+    .aggregate<EventResult>([
+      { $match: { _id: invite.eventId } },
       mongoQueries.eventQuery.signedUsers,
+      mongoQueries.eventQuery.invites,
     ])
     .next();
+
+  if (!event) throw new BaseError('Event not found', 404);
 
   return event;
 }

@@ -1,10 +1,14 @@
 import { ObjectId } from 'mongodb';
 import logging from '../config/logging';
 import DBClient from '../clients/mongoClient';
+import { mapIds } from '../utils/helperFunctions';
+import BaseError from '../utils/Error';
 
 const NAMESPACE = 'deleteUserEventDB';
 
-import { UserCollection } from '../models/models';
+type EventRequests = {
+  eventRequests: ObjectId[];
+};
 
 export default async function deleteUserEvent(
   userID: string
@@ -17,13 +21,11 @@ export default async function deleteUserEvent(
   const usersCollection = DBClient.collection.Users();
   const eventInvitesCollection = DBClient.collection.EventInvites();
 
-  const eventRequests = await usersCollection
-    .aggregate([
-      {
-        $match: {
-          _id: new ObjectId(userID),
-        },
-      },
+  const userIDObject = new ObjectId(userID);
+
+  const result = await usersCollection
+    .aggregate<EventRequests>([
+      { $match: { _id: userIDObject } },
       {
         $project: {
           _id: 0,
@@ -38,36 +40,29 @@ export default async function deleteUserEvent(
     ])
     .next();
 
-  const requests = eventRequests!.eventRequests.map(
-    (e: string) => new ObjectId(e)
-  );
+  if (!result) throw new BaseError('User not found', 404);
+
+  const requests = result.eventRequests;
+
   await eventsCollection.bulkWrite([
     {
       updateMany: {
-        filter: {
-          invites: { $in: requests },
-        },
+        filter: { invites: { $in: requests } },
         update: {
-          $pull: {
-            invites: {
-              $in: requests,
-            },
+          $pullAll: {
+            invites: requests,
           },
         },
       },
     },
     {
       updateMany: {
-        filter: {
-          signedUsers: { $elemMatch: { _id: new ObjectId(userID) } },
-        },
-        update: { $pull: { signedUsers: new ObjectId(userID) } },
+        filter: { signedUsers: { $in: [userIDObject] } },
+        update: { $pull: { signedUsers: userIDObject } },
       },
     },
     {
-      deleteMany: {
-        filter: { 'createdBy._id': new ObjectId(userID) },
-      },
+      deleteMany: { filter: { 'createdBy._id': userIDObject } },
     },
   ]);
 
@@ -80,6 +75,8 @@ export default async function deleteUserEvent(
               'eventsRequests.sent': {
                 $in: requests,
               },
+            },
+            {
               'eventsRequests.received': {
                 $in: requests,
               },
@@ -100,28 +97,26 @@ export default async function deleteUserEvent(
     },
     {
       updateMany: {
-        filter: {
-          friends: { $in: [new ObjectId(userID)] },
-        },
-        update: { $pull: { friends: new ObjectId(userID) } },
+        filter: { friends: { $in: [userIDObject] } },
+        update: { $pull: { friends: userIDObject } },
       },
     },
     {
       updateMany: {
         filter: {
-          'friendsRequests.received': { $in: [new ObjectId(userID)] },
+          'friendsRequests.received': { $in: [userIDObject] },
         },
         update: {
           $pull: {
-            'friendsRequests.received': new ObjectId(userID),
-            'friendsRequests.sent': new ObjectId(userID),
+            'friendsRequests.received': userIDObject,
+            'friendsRequests.sent': userIDObject,
           },
         },
       },
     },
     {
       deleteOne: {
-        filter: { _id: new ObjectId(userID) },
+        filter: { _id: userIDObject },
       },
     },
   ]);

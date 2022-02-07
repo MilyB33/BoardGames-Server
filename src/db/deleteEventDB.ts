@@ -18,17 +18,16 @@ export default async function deleteEvent(
   const userCollection = DBClient.collection.Users();
   const eventInvitesCollection = DBClient.collection.EventInvites();
 
+  const eventIDObject = new ObjectId(eventID);
+  const userIDObject = new ObjectId(userID);
+
   const invitesInfo = await eventInvitesCollection
-    .find({
-      eventId: new ObjectId(eventID),
-    })
+    .find({ eventId: eventIDObject })
     .toArray();
 
   if (!invitesInfo) throw new BaseError('Event not found');
 
   const transformedInfo = transformEventInvitesInfo(invitesInfo);
-
-  // console.log(transformedInfo);
 
   await userCollection.bulkWrite([
     {
@@ -51,13 +50,11 @@ export default async function deleteEvent(
   ]);
 
   await eventInvitesCollection.deleteMany({
-    _id: {
-      $in: transformedInfo.eventInvitesIds,
-    },
+    _id: { $in: transformedInfo.eventInvitesIds },
   });
 
   await eventsCollection.deleteOne({
-    _id: new ObjectId(eventID),
-    'createdBy._id': new ObjectId(userID),
+    _id: eventIDObject,
+    'createdBy._id': userIDObject,
   });
 }

@@ -5,8 +5,9 @@ import BaseError from '../utils/Error';
 import mongoQueries from '../models/mongoAggregateQueries';
 
 import {
-  mapUserEntries,
   sortUsersInOrder,
+  mapIds,
+  mapUserEntries,
 } from '../utils/helperFunctions';
 
 import { User } from '../models/models';
@@ -23,14 +24,10 @@ export default async function AddContact(
 
   const userCollection = DBClient.collection.Users();
 
-  const usersIDs = [new ObjectId(userID), new ObjectId(friendID)];
+  const usersIDs = [userID, friendID].map(mapIds);
 
   const cursor = userCollection.aggregate<User>([
-    {
-      $match: {
-        _id: { $in: usersIDs },
-      },
-    },
+    { $match: { _id: { $in: usersIDs } } },
     mongoQueries.userQuery.userEntryWithFriends(userID),
   ]);
 
@@ -48,14 +45,18 @@ export default async function AddContact(
     friendsRequests: { received },
   } = users[0];
 
-  if (friends.map(mapUserEntries).includes(users[1]._id.toString()))
-    throw new BaseError('User already in friends list');
-
-  if (!received.map(mapUserEntries).includes(users[1]._id.toString()))
-    throw new BaseError('User is not requesting to be friends');
-
   const userId = users[0]._id;
   const requestedUserId = users[1]._id;
+
+  if (
+    friends.map(mapUserEntries).includes(requestedUserId.toString())
+  )
+    throw new BaseError('User already in friends list');
+
+  if (
+    !received.map(mapUserEntries).includes(requestedUserId.toString())
+  )
+    throw new BaseError('User is not requesting to be friends');
 
   await userCollection.bulkWrite([
     {

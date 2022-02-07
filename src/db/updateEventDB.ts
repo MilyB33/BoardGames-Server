@@ -1,8 +1,9 @@
 import { ObjectId } from 'mongodb';
 import DBClient from '../clients/mongoClient';
 import BaseError from '../utils/Error';
+import mongoQueries from '../models/mongoAggregateQueries';
 
-import { EventOptionally, FullEvent } from '../models/models';
+import { EventOptionally, EventResult } from '../models/models';
 
 import logging from '../config/logging';
 
@@ -12,30 +13,40 @@ export default async function updateEvent(
   userID: string,
   eventID: string,
   event: EventOptionally
-): Promise<FullEvent> {
+): Promise<EventResult> {
   logging.debug(NAMESPACE, 'updateEventDB');
 
   await DBClient.connect();
 
   const collection = DBClient.collection.Events();
 
+  const userIDObject = new ObjectId(userID);
+  const eventIDObject = new ObjectId(eventID);
+
   const foundEvent = await collection.findOne({
-    _id: new ObjectId(eventID),
-    'createdBy._id': new ObjectId(userID),
+    _id: eventIDObject,
+    'createdBy._id': userIDObject,
   });
 
   if (!foundEvent) throw new BaseError('Event not found', 404);
 
-  const result = await collection.findOneAndUpdate(
+  await collection.updateOne(
     {
-      _id: new ObjectId(eventID),
-      'createdBy._id': new ObjectId(userID),
+      _id: eventIDObject,
+      'createdBy._id': userIDObject,
     },
-    { $set: { ...event } },
-    { returnDocument: 'after' }
+    { $set: { ...event } }
   );
 
-  if (!result.value) throw new BaseError('Event not found', 404);
+  const updatedEvent = await collection
+    .aggregate<EventResult>([
+      { $match: { _id: eventIDObject } },
+      mongoQueries.eventQuery.signedUsers,
+      mongoQueries.eventQuery.invites,
+    ])
+    .next();
 
-  return result.value;
+  if (!updatedEvent) throw new BaseError('Event not found', 404);
+
+  return updatedEvent;
 }

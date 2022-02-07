@@ -108,9 +108,9 @@ const signedUsers = {
 const invites = {
   $lookup: {
     from: 'EventInvites',
-    let: { eventId: '$_eventId' },
+    let: { invites: '$invites' },
     pipeline: [
-      { $match: { $expr: { $eq: ['$eventID', '$$eventId'] } } },
+      { $match: { $expr: { $in: ['$_id', '$$invites'] } } },
       {
         $lookup: {
           from: 'Users',

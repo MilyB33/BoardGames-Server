@@ -1,4 +1,108 @@
 import { ObjectId, Collection } from 'mongodb';
+import { JwtPayload } from 'jsonwebtoken';
+
+// ========================================================
+
+// User
+
+export type RequestsEntry = {
+  sent: ObjectId[];
+  received: ObjectId[];
+};
+
+export interface UserEntry {
+  _id: ObjectId;
+  username: string;
+}
+
+export type User = {
+  _id: ObjectId;
+  username: string;
+  friends: ObjectId[];
+  friendsRequests: RequestsEntry;
+  eventsRequests: RequestsEntry;
+  token: string;
+};
+
+export type UserResult = User & {
+  friends: UserEntry[];
+};
+
+export interface Secrets {
+  username: string;
+  password: string;
+}
+
+export interface UserEntryRequest {
+  sent: UserEntry[];
+  received: UserEntry[];
+}
+
+export interface UserInfo {
+  friends: UserEntry[];
+  friendsRequests: UserEntryRequest;
+  eventsRequests: RequestsEntry;
+  events: {
+    userEvents: Event[];
+    userSignedEvents: Event[];
+    userInvitedEvents: Event[];
+  };
+}
+
+export type LoginData = UserEntry & {
+  token: string;
+};
+
+// ========================================================
+
+// Events
+
+export type inviteEntry = {
+  _id: ObjectId;
+  user: UserEntry;
+};
+
+export type EventResult = Event & {
+  _id?: string;
+  createdBy: UserEntry;
+  createdAt: Date;
+  signedUsers: UserEntry[];
+  invites: inviteEntry[];
+};
+
+export type FullEvent = Event & {
+  _id?: ObjectId;
+  createdAt: string;
+  createdBy: UserEntry;
+  signedUsers: ObjectId[];
+  invites: ObjectId[];
+};
+
+export type EventOptionally = {
+  place?: string;
+  date?: string;
+  time?: string;
+  game?: string;
+  description?: string;
+  location?: string;
+  town?: string;
+  maxPlayers?: number;
+  isPrivate?: boolean;
+};
+
+export type Event = Required<EventOptionally>;
+
+// ========================================================
+
+// EventsInvites
+
+export type EventInviteResult = {
+  _id: ObjectId;
+  eventId: ObjectId;
+  user: UserEntry;
+};
+
+// ========================================================
 
 // Collections
 
@@ -10,7 +114,30 @@ export type UserCollection = Omit<User, 'token'> & {
   password: string;
 };
 
-export type EventsCollection = FullEvent;
+export type EventsCollection = {
+  _id: ObjectId;
+  location: string;
+  description: string;
+  game: string;
+  town: string;
+  maxPlayers: number;
+  isPrivate: boolean;
+  date: string;
+  time: string;
+  createdBy: UserEntry;
+  createdAt: string;
+  signedUsers: ObjectId[];
+  invites: ObjectId[];
+};
+
+export type EventInvitesCollection = {
+  _id: ObjectId;
+  eventId: ObjectId;
+  users: {
+    sent: ObjectId;
+    received: ObjectId;
+  };
+};
 
 export type CollectionsNames =
   | 'Users'
@@ -30,107 +157,6 @@ export type CollectionsLiteral = {
   Events: () => Collection<EventsCollection>;
   Test: () => Collection<any>;
   EventInvites: () => Collection<EventInvitesCollection>;
-};
-
-// ========================================================
-
-// EventsInvites
-
-export type EventInvitesCollection = {
-  _id: ObjectId;
-  eventId: ObjectId;
-  users: {
-    sent: ID;
-    received: ID;
-  };
-};
-
-// User
-
-export type FriendsRequest = {
-  sent: ID[];
-  received: ID[];
-};
-
-export type EventsRequest = {
-  sent: ID[];
-  received: ID[];
-};
-
-export interface UserEntry {
-  _id: ObjectId | string;
-  username: string;
-}
-
-export interface EventEntry {
-  eventId: ID;
-  user: ID;
-  invitedUser: ID;
-}
-
-export type ID = string | ObjectId;
-
-export type User = {
-  _id: ObjectId | string;
-  username: string;
-  friends: ID[];
-  friendsRequests: FriendsRequest;
-  eventsRequests: EventsRequest;
-  token: string;
-};
-
-export interface Secrets {
-  username: string;
-  password: string;
-}
-
-export interface UserInfo {
-  friends: ID[];
-  friendsRequests: FriendsRequest;
-  eventsRequests: EventsRequest;
-  events: {
-    userEvents: Event[];
-    userSignedEvents: Event[];
-  };
-}
-
-export type LoginData = UserEntry & {
-  token: string;
-};
-
-// ========================================================
-
-// Events
-
-export type EventResult = Event & {
-  _id?: string;
-  createdBy: UserEntry;
-  createdAt: string;
-  signedUsers: UserEntry[];
-  invites: UserEntry[] | ID[];
-};
-
-export type FullEvent = Event & {
-  _id?: ObjectId; // Probably this should be required
-  createdAt: string;
-  createdBy: UserEntry;
-  signedUsers: ID[];
-  invites: ID[];
-};
-
-export type EventOptionally = {
-  place?: string;
-  date?: string;
-  time?: string;
-  game?: string;
-  description?: string;
-};
-
-export type Event = Required<EventOptionally> & {
-  location: string;
-  town: string;
-  maxPlayers: number;
-  isPrivate: boolean;
 };
 
 // ========================================================
@@ -160,5 +186,9 @@ export type PaginationQuery = {
 export type CustomQuery<T, E = {}> = {
   [key in keyof E]: E[key];
 } & T;
+
+export type DecodedToken = JwtPayload & {
+  token: string;
+};
 
 // ========================================================

@@ -4,8 +4,9 @@ import logging from '../config/logging';
 import BaseError from '../utils/Error';
 
 import {
-  mapUserEntries,
   sortUsersInOrder,
+  mapIds,
+  mapUserEntries,
 } from '../utils/helperFunctions';
 
 import { User } from '../models/models';
@@ -15,14 +16,17 @@ const NAMESPACE = 'rejectFriendsRequestDB';
 export default async function rejectFriendsRequest(
   userID: string,
   friendID: string
-) {
+): Promise<void> {
   logging.debug(NAMESPACE, 'rejectFriendsRequest');
 
   await DBClient.connect();
 
   const userCollection = DBClient.collection.Users();
 
-  const usersIDs = [new ObjectId(userID), new ObjectId(friendID)];
+  const usersIDs = [userID, friendID].map(mapIds);
+
+  const userIDObject = new ObjectId(userID);
+  const friendIDObject = new ObjectId(friendID);
 
   const cursor = userCollection.aggregate<User>([
     {
@@ -37,7 +41,7 @@ export default async function rejectFriendsRequest(
         friends: 1,
         friendsRequests: {
           $cond: {
-            if: { _id: new ObjectId(userID) },
+            if: { _id: userIDObject },
             then: '$friendsRequests',
             else: '$$REMOVE',
           },
@@ -70,7 +74,7 @@ export default async function rejectFriendsRequest(
   await userCollection.bulkWrite([
     {
       updateOne: {
-        filter: { _id: new ObjectId(userID) },
+        filter: { _id: userIDObject },
         update: {
           $pull: {
             'friendsRequests.received': users[1]._id,
@@ -80,7 +84,7 @@ export default async function rejectFriendsRequest(
     },
     {
       updateOne: {
-        filter: { _id: new ObjectId(friendID) },
+        filter: { _id: friendIDObject },
         update: {
           $pull: {
             'friendsRequests.sent': users[0]._id,

@@ -27,46 +27,9 @@ const testing = async (body: any) => {
   const eventsCollection = MongoCustomClient.collection.Events();
   const testingCollection = MongoCustomClient.collection.Test();
 
-  // const eventRequests = await userCollection
-  //   .aggregate([
-  //     {
-  //       $match: {
-  //         _id: userID,
-  //       },
-  //     },
-  //     {
-  //       $project: {
-  //         _id: 0,
-  //         eventRequests: {
-  //           $concatArrays: [
-  //             '$eventsRequests.sent',
-  //             '$eventsRequests.received',
-  //           ],
-  //         },
-  //       },
-  //     },
-  //   ])
-  //   .next();
-
-  // const invitesInfo = await eventsCollection
-  //   .aggregate([
-  //     { $match: { _id: new ObjectId('61fa3ccf3f958c0f29a17fa2') } },
-  //     mongoAggregateQueries.eventQuery.signedUsers,
-  //     mongoAggregateQueries.eventQuery.invitesWithoutInfo,
-  //   ])
-  //   .next();
-
-  // const invitesInfo2 = await eventInvitesCollection
-  //   .find({
-  //     eventId: new ObjectId('61f9223ef16e72fc68e586cf'),
-  //   })
-  //   .toArray();
-
   const user = await userCollection
     .aggregate([
-      {
-        $match: { username: 'Admin3' },
-      },
+      { $match: { username: 'Admin' } },
       mongoQueries.eventQuery.userEvents,
       mongoQueries.eventQuery.signedEvents,
       mongoQueries.eventQuery.userInvitedEvents,

@@ -4,14 +4,14 @@ import mongQueries from '../models/mongoAggregateQueries';
 
 import logging from '../config/logging';
 import BaseError from '../utils/Error';
-import { Event, FullEvent } from '../models/models';
+import { Event, EventResult } from '../models/models';
 
 const NAMESPACE = 'addEventDB';
 
 export default async function add(
   ownerID: string,
   event: Event
-): Promise<FullEvent> {
+): Promise<EventResult> {
   logging.debug(NAMESPACE, `check ${ownerID}`);
 
   await DBClient.connect();
@@ -39,8 +39,8 @@ export default async function add(
     .then((result) => result.insertedId);
 
   const returnedEvent = await eventsCollection
-    .aggregate<FullEvent>([
-      { $match: { _id: new ObjectId(_id) } },
+    .aggregate<EventResult>([
+      { $match: { _id } },
       mongQueries.eventQuery.signedUsers,
       mongQueries.eventQuery.invites,
     ])

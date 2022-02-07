@@ -3,18 +3,21 @@ import bcrypt from 'bcrypt';
 
 import jwt, { Secret } from 'jsonwebtoken';
 import BaseError from '../utils/Error';
-import { Secrets, LoginData } from '../models/models';
+import { Secrets, LoginData, DecodedToken } from '../models/models';
+import { typeGuard } from '../utils/helperFunctions';
 
 import logging from '../config/logging';
 
 const NAMESPACE = 'loginDB';
 
-export default async function login(
-  secrets: Secrets
-): Promise<LoginData> {
+type Body = DecodedToken | Secrets;
+
+export default async function login(body: Body): Promise<LoginData> {
   logging.info(NAMESPACE, 'login');
 
-  const { username, password } = secrets;
+  let token = '';
+
+  const username = body.username;
 
   await DBClient.connect();
 
@@ -37,14 +40,19 @@ export default async function login(
 
   const { password: hashedPassword, ...restData } = user;
 
-  const isSame = await bcrypt.compare(password, hashedPassword);
-  if (!isSame) throw new BaseError('Invalid password', 401);
+  if (!typeGuard<Body, DecodedToken>(body, 'token')) {
+    const { password } = body;
 
-  const token = jwt.sign(
-    { username, id: user._id },
-    process.env.JWT_SECRET as Secret
-    // { expiresIn: '1h' } For now we don't need to expire the token
-  );
+    const isSame = await bcrypt.compare(password, hashedPassword);
+
+    if (!isSame) throw new BaseError('Invalid password', 401);
+
+    token = jwt.sign(
+      { username, id: user._id },
+      process.env.JWT_SECRET as Secret
+      // { expiresIn: '1h' } For now we don't need to expire the token
+    );
+  } else token = body.token;
 
   return {
     ...restData,

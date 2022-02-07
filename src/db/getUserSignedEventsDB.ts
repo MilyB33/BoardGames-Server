@@ -7,12 +7,12 @@ import { PaginationQuery } from '../models/models';
 
 const NAMESPACE = 'getUserSignedEvents';
 
-import { FullEvent } from '../models/models';
+import { EventResult } from '../models/models';
 
 export default async function getUserSignedEventsDB(
   userID: string,
   query: PaginationQuery
-): Promise<FullEvent[]> {
+): Promise<EventResult[]> {
   logging.info(NAMESPACE, 'getUserSignedEvents');
 
   const { offset, limit } = query;
@@ -21,12 +21,14 @@ export default async function getUserSignedEventsDB(
 
   const eventsCollection = DBClient.collection.Events();
 
+  const userIDObject = new ObjectId(userID);
+
   const events = await eventsCollection
-    .aggregate<FullEvent>([
+    .aggregate<EventResult>([
       {
         $match: {
-          createdBy: { _id: new ObjectId(userID) },
-          signedUsers: { $elemMatch: new ObjectId(userID) },
+          createdBy: { _id: { $not: userIDObject } },
+          signedUsers: { $elemMatch: userIDObject },
         },
       },
       { $skip: offset ? parseInt(offset) : 0 },

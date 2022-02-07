@@ -1,12 +1,10 @@
-import {
-  UserEntry,
-  ID,
-  EventInvitesCollection,
-} from '../models/models';
+import { EventInvitesCollection } from '../models/models';
 
 import { ObjectId } from 'mongodb';
 
-export const mapUserEntries = (entry: ID) => entry.toString();
+export const mapUserEntries = (entry: ObjectId) => entry.toString();
+
+export const mapIds = (entry: string) => new ObjectId(entry);
 
 export const sortUsersInOrder = <T>(arr: any[], order: any[]): T[] =>
   arr.sort(
@@ -36,7 +34,7 @@ export const transformEventInvitesInfo = (
       new ObjectId(invite.users.sent),
       new ObjectId(invite.users.received),
     ],
-    [] as ID[]
+    [] as ObjectId[]
   ),
   setOfUsers: new Set(
     EventInvites.reduce(
@@ -45,7 +43,19 @@ export const transformEventInvitesInfo = (
         new ObjectId(invite.users.sent),
         new ObjectId(invite.users.received),
       ],
-      [] as ID[]
+      [] as ObjectId[]
     )
   ),
 });
+
+export const typeGuard = <
+  DT extends {
+    [key: string]: any;
+  },
+  T extends DT
+>(
+  data: DT,
+  field: string
+): data is T => {
+  return Boolean((data as T)[field]);
+};

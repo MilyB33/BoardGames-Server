@@ -1,4 +1,3 @@
-import { ObjectId } from 'mongodb';
 import DBClient from '../clients/mongoClient';
 import mongoQueries from '../models/mongoAggregateQueries';
 
@@ -6,12 +5,12 @@ import logging from '../config/logging';
 
 const NAMESPACE = 'getEventsUserAllDB';
 
-import { FullEvent, PaginationQuery } from '../models/models';
+import { EventResult, PaginationQuery } from '../models/models';
 
 export default async function getEventsUserAll(
   userID: string,
   query: PaginationQuery
-): Promise<FullEvent[]> {
+): Promise<EventResult[]> {
   logging.debug(NAMESPACE, 'getEventsUserAll');
 
   const { offset, limit } = query;
@@ -21,7 +20,7 @@ export default async function getEventsUserAll(
   const eventsCollection = DBClient.collection.Events();
 
   const events = await eventsCollection
-    .aggregate<FullEvent>([
+    .aggregate<EventResult>([
       { $match: { $expr: { $eq: ['$createdBy._id', userID] } } },
       { $skip: offset ? parseInt(offset) : 0 },
       { $limit: limit ? parseInt(limit) : 0 },

@@ -5,11 +5,11 @@ import logging from '../config/logging';
 
 const NAMESPACE = 'getEventsAllDB';
 
-import { FullEvent, PaginationQuery } from '../models/models';
+import { EventResult, PaginationQuery } from '../models/models';
 
 export default async function getEventsAllDB(
   query: PaginationQuery
-): Promise<FullEvent[]> {
+): Promise<EventResult[]> {
   logging.debug(NAMESPACE, 'getEventsAllDB');
 
   const { offset, limit } = query;
@@ -19,7 +19,7 @@ export default async function getEventsAllDB(
   const eventsCollection = DBClient.collection.Events();
 
   const events = await eventsCollection
-    .aggregate<FullEvent>([
+    .aggregate<EventResult>([
       { $match: { isPrivate: false } },
       { $skip: offset ? parseInt(offset) : 0 },
       { $limit: limit ? parseInt(limit) : 0 },

@@ -7,58 +7,57 @@ import mongoQueries from '../models/mongoAggregateQueries';
 import {
   mapUserEntries,
   sortUsersInOrder,
+  mapIds,
 } from '../utils/helperFunctions';
 
-import { User } from '../models/models';
+import { UserResult } from '../models/models';
 
 const NAMESPACE = 'deleteFriendDB';
 
 export default async function deleteFriend(
   userID: string,
   friendID: string
-) {
+): Promise<void> {
   logging.debug(NAMESPACE, 'deleteFriend');
 
   await DBClient.connect();
 
   const userCollection = DBClient.collection.Users();
 
-  const userIDs = [new ObjectId(userID), new ObjectId(friendID)];
+  const userIDs = [userID, friendID].map(mapIds);
 
-  const cursor = userCollection.aggregate<User>([
-    {
-      $match: {
-        _id: { $in: userIDs },
-      },
-    },
-    mongoQueries.userQuery.userEntryWithFriends(userID),
-  ]);
+  const usersResult = await userCollection
+    .aggregate<UserResult>([
+      { $match: { _id: { $in: userIDs } } },
+      mongoQueries.userQuery.userEntryWithFriends(userID),
+    ])
+    .toArray();
 
-  const users = sortUsersInOrder<User>(
-    await cursor.toArray(),
-    userIDs
-  );
+  const users = sortUsersInOrder<UserResult>(usersResult, userIDs);
 
   if (!users[0] || !users[1]) throw new BaseError('User not found');
+
+  const userId = users[0]._id;
+  const friendId = users[1]._id;
 
   if (
     !users[0].friends
       .map(mapUserEntries)
-      .includes(users[1]._id.toString())
+      .includes(friendId.toString())
   )
     throw new BaseError('User not in friends list');
 
   await userCollection.bulkWrite([
     {
       updateOne: {
-        filter: { _id: users[0]._id },
-        update: { $pull: { friends: users[1]._id } },
+        filter: { _id: userId },
+        update: { $pull: { friends: friendId } },
       },
     },
     {
       updateOne: {
-        filter: { _id: users[1]._id },
-        update: { $pull: { friends: users[0]._id } },
+        filter: { _id: friendId },
+        update: { $pull: { friends: userId } },
       },
     },
   ]);

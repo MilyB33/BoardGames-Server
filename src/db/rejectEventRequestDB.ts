@@ -1,46 +1,46 @@
-import { ObjectId } from "mongodb";
-import DBClient from "../clients/mongoClient";
-import BaseError from "../utils/Error";
+import { ObjectId } from 'mongodb';
+import DBClient from '../clients/mongoClient';
+import BaseError from '../utils/Error';
 
-export default async function rejectEventRequest(inviteId: string) {
+export default async function rejectEventRequest(
+  inviteId: string
+): Promise<void> {
   await DBClient.connect();
 
   const userCollection = DBClient.collection.Users();
   const eventInvitesCollection = DBClient.collection.EventInvites();
   const eventsCollection = DBClient.collection.Events();
 
+  const inviteIdObject = new ObjectId(inviteId);
+
   const invite = await eventInvitesCollection.findOne({
-    _id: new ObjectId(inviteId),
+    _id: inviteIdObject,
   });
 
-  if (!invite) throw new BaseError("Invite not found", 404);
+  if (!invite) throw new BaseError('Invite not found', 404);
 
   await eventsCollection.updateOne(
-    { _id: new ObjectId(invite.eventId) },
-    {
-      $pull: {
-        invites: new ObjectId(inviteId),
-      },
-    }
+    { _id: invite.eventId },
+    { $pull: { invites: inviteIdObject } }
   );
 
   await userCollection.bulkWrite([
     {
       updateOne: {
-        filter: { _id: new ObjectId(invite.users.sent) },
+        filter: { _id: invite.users.sent },
         update: {
           $pull: {
-            "eventsRequests.sent": new ObjectId(inviteId),
+            'eventsRequests.sent': inviteIdObject,
           },
         },
       },
     },
     {
       updateOne: {
-        filter: { _id: new ObjectId(invite.users.received) },
+        filter: { _id: invite.users.received },
         update: {
           $pull: {
-            "eventsRequests.received": new ObjectId(inviteId),
+            'eventsRequests.received': inviteIdObject,
           },
         },
       },
@@ -48,6 +48,6 @@ export default async function rejectEventRequest(inviteId: string) {
   ]);
 
   await eventInvitesCollection.deleteOne({
-    _id: new ObjectId(inviteId),
+    _id: inviteIdObject,
   });
 }

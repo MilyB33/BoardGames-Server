@@ -2,11 +2,12 @@ import { ObjectId } from 'mongodb';
 import DBClient from '../clients/mongoClient';
 import BaseError from '../utils/Error';
 import {
-  mapUserEntries,
   sortUsersInOrder,
+  mapIds,
+  mapUserEntries,
 } from '../utils/helperFunctions';
 
-import { User } from '../models/models';
+import { User, EventInviteResult } from '../models/models';
 
 interface Body {
   requestedUserID: string;
@@ -16,7 +17,7 @@ interface Body {
 export default async function eventRequest(
   userID: string,
   body: Body
-) {
+): Promise<EventInviteResult> {
   const { requestedUserID, eventID } = body;
 
   await DBClient.connect();
@@ -25,10 +26,11 @@ export default async function eventRequest(
   const eventsCollection = DBClient.collection.Events();
   const eventInvitesCollection = DBClient.collection.EventInvites();
 
-  const usersIDs = [
-    new ObjectId(userID),
-    new ObjectId(requestedUserID),
-  ];
+  const usersIDs = [userID, requestedUserID].map(mapIds);
+
+  const userIDObject = new ObjectId(userID);
+  const requestedUserIDObject = new ObjectId(requestedUserID);
+  const eventIDObject = new ObjectId(eventID);
 
   const cursor = userCollection.aggregate<User>([
     {
@@ -42,7 +44,7 @@ export default async function eventRequest(
         username: 1,
         friends: {
           $cond: {
-            if: { $eq: ['$_id', new ObjectId(userID)] },
+            if: { $eq: ['$_id', userIDObject] },
             then: '$friends',
             else: '$$REMOVE',
           },
@@ -65,25 +67,25 @@ export default async function eventRequest(
   if (!friends.map(mapUserEntries).includes(users[1]._id.toString()))
     throw new BaseError('User not in friends list');
 
-  const insertedID = await eventInvitesCollection.insertOne({
-    eventId: new ObjectId(eventID),
+  const result = await eventInvitesCollection.insertOne({
+    eventId: eventIDObject,
     users: {
-      sent: new ObjectId(userID),
-      received: new ObjectId(requestedUserID),
+      sent: userIDObject,
+      received: requestedUserIDObject,
     },
   });
+
+  const insertedId = result.insertedId;
 
   await userCollection.bulkWrite([
     {
       updateOne: {
         filter: {
-          _id: new ObjectId(userID),
+          _id: userIDObject,
         },
         update: {
           $push: {
-            'eventsRequests.sent': new ObjectId(
-              insertedID.insertedId
-            ),
+            'eventsRequests.sent': insertedId,
           },
         },
       },
@@ -91,13 +93,11 @@ export default async function eventRequest(
     {
       updateOne: {
         filter: {
-          _id: new ObjectId(requestedUserID),
+          _id: requestedUserIDObject,
         },
         update: {
           $push: {
-            'eventsRequests.received': new ObjectId(
-              insertedID.insertedId
-            ),
+            'eventsRequests.received': insertedId,
           },
         },
       },
@@ -105,19 +105,13 @@ export default async function eventRequest(
   ]);
 
   await eventsCollection.updateOne(
-    {
-      _id: new ObjectId(eventID),
-    },
-    {
-      $push: {
-        invites: new ObjectId(insertedID.insertedId),
-      },
-    }
+    { _id: eventIDObject },
+    { $push: { invites: insertedId } }
   );
 
   return {
-    _id: insertedID.insertedId,
-    eventId: eventID,
+    _id: insertedId,
+    eventId: eventIDObject,
     user: {
       _id: users[1]._id,
       username: users[1].username,
